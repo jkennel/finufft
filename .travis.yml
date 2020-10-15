@@ -1,6 +1,7 @@
 language: r
 cache: packages
-sudo: required
+os: linux
+dist: xenial
 apt_packages:
   - libfftw3-dev
 r_packages:
