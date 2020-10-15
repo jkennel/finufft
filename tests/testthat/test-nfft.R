@@ -11,9 +11,9 @@ test_that("nfft 1-D works", {
   
   nfft_res <- nfft(x, y, 10000)
   
-  fft_res <- fft(y_comp)
-  
-  plot(seq(1, n, 10), sqrt(Re(nfft_res * Conj(nfft_res)))/length(s),  type = 'l')
-  points(sqrt(Re(fft_res * Conj(fft_res)))/(n), type = 'l', col = 'red')
-  
+  # fft_res <- fft(y_comp)
+  # 
+  # plot(seq(1, n, 10), sqrt(Re(nfft_res * Conj(nfft_res)))/length(s),  type = 'l')
+  # points(sqrt(Re(fft_res * Conj(fft_res)))/(n), type = 'l', col = 'red')
+  # 
 })
