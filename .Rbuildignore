@@ -1,3 +1,5 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
-\R\copy_finufft.R
+inst/finufft
+^LICENSE\.md$
+\.travis\.yml

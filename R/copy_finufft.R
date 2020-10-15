@@ -1,7 +1,8 @@
 # ## This file copies the necessary files from finufft
-#
+# 
 # fn_h <- list.files('inst/finufft', full.names = TRUE, recursive = TRUE, pattern = 'h$')
 # fn_h <- fn_h[tools::file_ext(fn_h) != 'sh']
+# fn_h <- fn_h[tools::file_ext(fn_h) != 'fh']
 # fn_cpp <- list.files('inst/finufft/include', full.names = TRUE, recursive = TRUE, pattern = 'cpp$')
 # 
 # fn_c <- list.files('inst/finufft/include', full.names = TRUE, recursive = TRUE, pattern = 'c$')

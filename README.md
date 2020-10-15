@@ -1,6 +1,10 @@
+<!-- badges: start -->
+[![Travis build status](https://travis-ci.com/jkennel/finufft.svg?branch=master)](https://travis-ci.com/jkennel/finufft)
+<!-- badges: end -->
+
 ## finufft
 
-Provide an interface to FINUFFT (https://github.com/flatironinstitute/finufft).
+Provide an R interface to FINUFFT (https://github.com/flatironinstitute/finufft).
 
 ### Steps 
 - Clone FINUFFT git repository (https://github.com/flatironinstitute/finufft) to inst folder.

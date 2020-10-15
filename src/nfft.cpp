@@ -1,9 +1,7 @@
-// -*- mode: C++; c-indent-level: 4; c-basic-offset: 4; indent-tabs-mode: nil; -*-
-
 #include <Rcpp.h>
 using namespace Rcpp;
 
-// this is all you must include for the finufft lib...
+// this is all you must include for the finufft
 #include "finufft.h"
 
 // also used in this example...
@@ -14,9 +12,25 @@ using namespace Rcpp;
 #include <cassert>
 
 
+//==============================================================================
+//' @title
+//' nfft
+//'
+//' @description
+//' wrapper for 1d1 nufft
+//'
+//' @param x locations
+//' @param c complex weights
+//' @param N number of output modes
+//' @param tol precision
+//'
+//' @return complex vector
+//'
+//' 
+//' @export
 // [[Rcpp::export]]
 Rcpp::ComplexVector nfft(std::vector<double> x,
-                         std::vector<std::complex<double>>  c, 
+                         std::vector<std::complex<double>> c, 
                          int N,
                          double tol = 1e-9) {
   

@@ -4,12 +4,15 @@ Title: R integration for FINUFFT
 Version: 2.0.1
 Date: 2020-10-13
 Author: Jonathan Kennel and Beth Parker
-Maintainer: Jonathan Kennel
-     <jkennel@uoguelph.ca>
-Description: R interface to the FINUFFT C++ library used to efficiently calculate nonuniform fast Fourier transforms.
-License: Apache 2.0
+Maintainer: Jonathan Kennel <jkennel@uoguelph.ca>
+Description: R interface to the FINUFFT library used to efficiently calculate nonuniform fast Fourier transforms.
+License: Apache License (>= 2.0)
 Imports: Rcpp (>= 1.0.5)
 LinkingTo: Rcpp
-SystemRequirements: fftw3 (>= 3.3.5), C++14
+SystemRequirements: 
+    fftw3 (>= 3.3.5), 
+    C++14
 Suggests: 
-    testthat
+    tinytest
+RoxygenNote: 7.1.1
+Encoding: UTF-8
