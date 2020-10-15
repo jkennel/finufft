@@ -1,3 +1,4 @@
+#include <Rcpp.h>
 // Defines interface to spreading/interpolation code.
 // Note: see defs.h for definition of MAX_NSPREAD (as of 9/24/18).
 // RESCALE macro moved to spreadinterp.cpp, 7/15/20.

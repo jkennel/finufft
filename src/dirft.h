@@ -1,3 +1,4 @@
+#include <Rcpp.h>
 #ifndef DIRFT_H
 #define DIRFT_H
 

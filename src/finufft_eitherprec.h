@@ -1,3 +1,4 @@
+#include <Rcpp.h>
 // Switchable-precision interface template for FINUFFT. Used by finufft.h
 // Internal use only: users should link to finufft.h
 // Barnett 7/1/20

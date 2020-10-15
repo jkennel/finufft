@@ -1,3 +1,4 @@
+#include <Rcpp.h>
 // Switchable-precision interface template for FINUFFT PLAN struct, used by
 // finufft_plan.h.
 // Internal use only: users should link to finufft.h

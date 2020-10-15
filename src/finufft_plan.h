@@ -1,3 +1,4 @@
+#include <Rcpp.h>
 // Defines C++/C user interface to the FINUFFT plan structs in both precisions:
 // it provides finufft_plan (double-prec) and finufftf_plan (single-prec).
 // Barnett 7/5/20

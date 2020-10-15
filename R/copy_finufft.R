@@ -30,11 +30,16 @@
 # 
 # for (i in seq_along(fn)) {
 #   tmp <- readLines(fn[i])
+#   tmp <- gsub("../contrib/legendre_rule_fast.h", 'legendre_rule_fast.h', tmp)
+#   tmp <- gsub(" cout", ' Rcpp::Rcout', tmp)
+#   tmp <- gsub(" printf", ' Rprintf', tmp)
+#   tmp <- gsub(" fprintf", ' REprintf', tmp)
+#   tmp <- gsub("stderr", '"Error"', tmp)
+# 
 #   for (j in seq_along(fn_h)) {
 #     tmp <- gsub(paste0("<",basename(fn_h[j]),">"), paste0('"',basename(fn_h[j]),'"'), tmp)
-#     tmp <- gsub("../contrib/legendre_rule_fast.h", 'legendre_rule_fast.h', tmp)
 #   }
-#   writeLines(tmp, file.path('src', basename(fn[i])))
+#   writeLines(c('#include <Rcpp.h>',tmp), file.path('src', basename(fn[i])))
 # }
 # 
 # 
@@ -63,6 +68,10 @@
 # pa <- readLines('inst/finufft/src/ker_horner_allw_loop.c')
 # pb <- readLines('inst/finufft/src/ker_lowupsampfac_horner_allw_loop.c')
 # 
+# pa <- gsub(" printf", ' Rprintf', pa)
+# pb <- gsub(" printf", ' Rprintf', pb)
+# 
+# 
 # s <- grep('ker_horner_allw_loop.c', si)
 # s2 <- grep('ker_lowupsampfac_horner_allw_loop.c', si)
 # n <- length(si)
@@ -75,4 +84,7 @@
 # 
 # 
 # writeLines(si, 'src/spreadinterp.cpp')
+# 
+# 
+# 
 # 

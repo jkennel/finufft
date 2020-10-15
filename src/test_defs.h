@@ -1,3 +1,4 @@
+#include <Rcpp.h>
 // test-wide definitions and headers for use in ../test/*.cpp and ../perftest
 
 #ifndef TEST_DEFS_H

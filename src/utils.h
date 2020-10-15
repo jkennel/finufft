@@ -1,3 +1,4 @@
+#include <Rcpp.h>
 // Header for utils.cpp, a little library of low-level array stuff.
 // These are just the functions which depend on single/double precision (FLT)
 

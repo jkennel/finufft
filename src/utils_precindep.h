@@ -1,3 +1,4 @@
+#include <Rcpp.h>
 // Header for utils_precindep.cpp, a little library of array and timer stuff.
 // Only the precision-independent routines here (get compiled once)
 

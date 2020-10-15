@@ -1,3 +1,4 @@
+#include <Rcpp.h>
 // Low-level array manipulations, timer, and OMP helpers, that are precision-
 // independent (no FLT allowed in argument lists). Others are in utils
 

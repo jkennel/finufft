@@ -1,3 +1,4 @@
+#include <Rcpp.h>
 #include "finufft_eitherprec.h"
 #include "defs.h"
 #include "dataTypes.h"
@@ -100,7 +101,7 @@ int SET_NF_TYPE12(BIGINT ms, nufft_opts opts, spread_opts spopts, BIGINT *nf)
     *nf = next235even(*nf);                       // expensive at huge nf
     return 0;
   } else {
-    fprintf(stderr,"[%s] nf=%.3g exceeds MAX_NF of %.3g, so exit without attempting even a malloc\n",__func__,(double)*nf,(double)MAX_NF);
+    REprintf("Error","[%s] nf=%.3g exceeds MAX_NF of %.3g, so exit without attempting even a malloc\n",__func__,(double)*nf,(double)MAX_NF);
     return ERR_MAXNALLOC;
   }
 }
@@ -241,13 +242,13 @@ void onedim_nuft_kernel(BIGINT nk, FLT *k, FLT *phihat, spread_opts opts)
   FLT J2 = opts.nspread/2.0;        // J/2, half-width of ker z-support
   // # quadr nodes in z (from 0 to J/2; reflections will be added)...
   int q=(int)(2 + 2.0*J2);     // > pi/2 ratio.  cannot exceed MAX_NQUAD
-  if (opts.debug) printf("q (# ker FT quadr pts) = %d\n",q);
+  if (opts.debug) Rprintf("q (# ker FT quadr pts) = %d\n",q);
   FLT f[MAX_NQUAD]; double z[2*MAX_NQUAD],w[2*MAX_NQUAD];
   legendre_compute_glr(2*q,z,w);        // only half the nodes used, eg on (0,1)
   for (int n=0;n<q;++n) {
     z[n] *= J2;                                    // quadr nodes for [0,J/2]
     f[n] = J2*(FLT)w[n] * evaluate_kernel((FLT)z[n], opts);  // w/ quadr weights
-    //    printf("f[%d] = %.3g\n",n,f[n]);
+    //    Rprintf("f[%d] = %.3g\n",n,f[n]);
   }
 #pragma omp parallel for num_threads(opts.nthreads)
   for (BIGINT j=0;j<nk;++j) {          // loop along output array
@@ -533,7 +534,7 @@ int FINUFFT_MAKEPLAN(int type, int dim, BIGINT* n_modes, int iflag,
 // evaluates spreading kernel coefficients, and instantiates the fftw_plan
 {
   FINUFFT_PLAN p;
-  cout << scientific << setprecision(15);  // for commented-out low-lev debug
+  Rcpp::Rcout << scientific << setprecision(15);  // for commented-out low-lev debug
 
   p = new FINUFFT_PLAN_S;
   *pp = p;                               // pass out plan as ptr to plan struct
@@ -544,18 +545,18 @@ int FINUFFT_MAKEPLAN(int type, int dim, BIGINT* n_modes, int iflag,
     p->opts = *opts;    // keep a deep copy; changing *opts now has no effect
 
   if (p->opts.debug)    // do a hello world
-    printf("[%s] new plan: FINUFFT version " FINUFFT_VER " .................\n",__func__);
+    Rprintf("[%s] new plan: FINUFFT version " FINUFFT_VER " .................\n",__func__);
   
   if((type!=1)&&(type!=2)&&(type!=3)) {
-    fprintf(stderr, "[%s] Invalid type (%d), should be 1, 2 or 3.\n",__func__,type);
+    REprintf("Error", "[%s] Invalid type (%d), should be 1, 2 or 3.\n",__func__,type);
     return ERR_TYPE_NOTVALID;
   }
   if((dim!=1)&&(dim!=2)&&(dim!=3)) {
-    fprintf(stderr, "[%s] Invalid dim (%d), should be 1, 2 or 3.\n",__func__,dim);
+    REprintf("Error", "[%s] Invalid dim (%d), should be 1, 2 or 3.\n",__func__,dim);
     return ERR_DIM_NOTVALID;
   }
   if (ntrans<1) {
-    fprintf(stderr,"[%s] ntrans (%d) should be at least 1.\n",__func__,ntrans);
+    REprintf("Error","[%s] ntrans (%d) should be at least 1.\n",__func__,ntrans);
     return ERR_NTRANS_NOTVALID;
   }
   
@@ -583,7 +584,7 @@ int FINUFFT_MAKEPLAN(int type, int dim, BIGINT* n_modes, int iflag,
   if (p->opts.spread_thread==0)
     p->opts.spread_thread=2;                // our auto choice
   if (p->opts.spread_thread!=1 && p->opts.spread_thread!=2) {
-    fprintf(stderr,"[%s] illegal opts.spread_thread!\n",__func__);
+    REprintf("Error","[%s] illegal opts.spread_thread!\n",__func__);
     return ERR_SPREAD_THREAD_NOTVALID;
   }
 
@@ -604,7 +605,7 @@ int FINUFFT_MAKEPLAN(int type, int dim, BIGINT* n_modes, int iflag,
         p->opts.upsampfac=1.25;
     }
     if (p->opts.debug > 1)
-      printf("[%s] set auto upsampfac=%.2f\n",__func__,p->opts.upsampfac);
+      Rprintf("[%s] set auto upsampfac=%.2f\n",__func__,p->opts.upsampfac);
   }
   // use opts to choose and write into plan's spread options...
   int ier = setup_spreader_for_nufft(p->spopts, tol, p->opts);
@@ -642,15 +643,15 @@ int FINUFFT_MAKEPLAN(int type, int dim, BIGINT* n_modes, int iflag,
       p->phiHat3 = (FLT*)malloc(sizeof(FLT)*(p->nf3/2 + 1));
     }
 
-    if (p->opts.debug) { // "long long" here is to avoid warnings with printf...
-      printf("[%s] %dd%d: (ms,mt,mu)=(%lld,%lld,%lld) (nf1,nf2,nf3)=(%lld,%lld,%lld)\n               ntrans=%d nthr=%d batchSize=%d ", __func__,
+    if (p->opts.debug) { // "long long" here is to avoid warnings with Rprintf...
+      Rprintf("[%s] %dd%d: (ms,mt,mu)=(%lld,%lld,%lld) (nf1,nf2,nf3)=(%lld,%lld,%lld)\n               ntrans=%d nthr=%d batchSize=%d ", __func__,
              dim, type, (long long)p->ms,(long long)p->mt,
              (long long) p->mu, (long long)p->nf1,(long long)p->nf2,
              (long long)p->nf3, ntrans, nthr, p->batchSize);
       if (p->batchSize==1)          // spread_thread has no effect in this case
-        printf("\n");
+        Rprintf("\n");
       else
-        printf(" spread_thread=%d\n", p->opts.spread_thread);
+        Rprintf(" spread_thread=%d\n", p->opts.spread_thread);
     }
 
     // STEP 0: get Fourier coeffs of spreading kernel along each fine grid dim
@@ -658,18 +659,18 @@ int FINUFFT_MAKEPLAN(int type, int dim, BIGINT* n_modes, int iflag,
     onedim_fseries_kernel(p->nf1, p->phiHat1, p->spopts);
     if (dim>1) onedim_fseries_kernel(p->nf2, p->phiHat2, p->spopts);
     if (dim>2) onedim_fseries_kernel(p->nf3, p->phiHat3, p->spopts);
-    if (p->opts.debug) printf("[%s] kernel fser (ns=%d):\t\t%.3g s\n",__func__,p->spopts.nspread, timer.elapsedsec());
+    if (p->opts.debug) Rprintf("[%s] kernel fser (ns=%d):\t\t%.3g s\n",__func__,p->spopts.nspread, timer.elapsedsec());
 
     timer.restart();
     p->nf = p->nf1*p->nf2*p->nf3;      // fine grid total number of points
     if (p->nf * p->batchSize > MAX_NF) {
-      fprintf(stderr, "[%s] fwBatch would be bigger than MAX_NF, not attempting malloc!\n",__func__);
+      REprintf("Error", "[%s] fwBatch would be bigger than MAX_NF, not attempting malloc!\n",__func__);
       return ERR_MAXNALLOC;
     }
     p->fwBatch = FFTW_ALLOC_CPX(p->nf * p->batchSize);    // the big workspace
-    if (p->opts.debug) printf("[%s] fwBatch %.2fGB alloc:   \t%.3g s\n", __func__,(double)1E-09*sizeof(CPX)*p->nf*p->batchSize, timer.elapsedsec());
+    if (p->opts.debug) Rprintf("[%s] fwBatch %.2fGB alloc:   \t%.3g s\n", __func__,(double)1E-09*sizeof(CPX)*p->nf*p->batchSize, timer.elapsedsec());
     if(!p->fwBatch) {      // we don't catch all such mallocs, just this big one
-      fprintf(stderr, "[%s] FFTW malloc failed for fwBatch (working fine grids)!\n",__func__);
+      REprintf("Error", "[%s] FFTW malloc failed for fwBatch (working fine grids)!\n",__func__);
       free(p->phiHat1); free(p->phiHat2); free(p->phiHat3);
       return ERR_ALLOC;
     }
@@ -679,14 +680,14 @@ int FINUFFT_MAKEPLAN(int type, int dim, BIGINT* n_modes, int iflag,
     // fftw_plan_many_dft args: rank, gridsize/dim, howmany, in, inembed, istride, idist, ot, onembed, ostride, odist, sign, flags 
     p->fftwPlan = FFTW_PLAN_MANY_DFT(dim, ns, p->batchSize, p->fwBatch,
          NULL, 1, p->nf, p->fwBatch, NULL, 1, p->nf, p->fftSign, p->opts.fftw);
-    if (p->opts.debug) printf("[%s] FFTW plan (mode %d, nthr=%d):\t%.3g s\n", __func__,p->opts.fftw, nthr_fft, timer.elapsedsec());
+    if (p->opts.debug) Rprintf("[%s] FFTW plan (mode %d, nthr=%d):\t%.3g s\n", __func__,p->opts.fftw, nthr_fft, timer.elapsedsec());
     delete []ns;
 
     p->sortIndices = NULL;
     
   } else {  // -------------------------- type 3 (no planning) ------------
 
-    if (p->opts.debug) printf("[%s] %dd%d: ntrans=%d\n",__func__,dim,type,ntrans);
+    if (p->opts.debug) Rprintf("[%s] %dd%d: ntrans=%d\n",__func__,dim,type,ntrans);
     // in case destroy occurs before setpts, need safe dummy ptrs/plans...
     p->CpBatch = NULL;
     p->fwBatch = NULL;
@@ -720,17 +721,17 @@ int FINUFFT_SETPTS(FINUFFT_PLAN p, BIGINT nj, FLT* xj, FLT* yj, FLT* zj,
     p->Y = yj;
     p->Z = zj;
     int ier = spreadcheck(p->nf1, p->nf2, p->nf3, p->nj, xj, yj, zj, p->spopts);
-    if (p->opts.debug>1) printf("[%s] spreadcheck (%d):\t%.3g s\n", __func__, p->spopts.chkbnds, timer.elapsedsec());
+    if (p->opts.debug>1) Rprintf("[%s] spreadcheck (%d):\t%.3g s\n", __func__, p->spopts.chkbnds, timer.elapsedsec());
     if (ier)         // no warnings allowed here
       return ier;    
     timer.restart();
     p->sortIndices = (BIGINT *)malloc(sizeof(BIGINT)*p->nj);
     if (!p->sortIndices) {
-      fprintf(stderr,"[%s] failed to allocate sortIndices!\n",__func__);
+      REprintf("Error","[%s] failed to allocate sortIndices!\n",__func__);
       return ERR_SPREAD_ALLOC;
     }
     p->didSort = indexSort(p->sortIndices, p->nf1, p->nf2, p->nf3, p->nj, xj, yj, zj, p->spopts);
-    if (p->opts.debug) printf("[%s] sort (didSort=%d):\t\t%.3g s\n", __func__,p->didSort, timer.elapsedsec());
+    if (p->opts.debug) Rprintf("[%s] sort (didSort=%d):\t\t%.3g s\n", __func__,p->didSort, timer.elapsedsec());
 
     
   } else {   // ------------------------- TYPE 3 SETPTS -----------------------
@@ -765,24 +766,24 @@ int FINUFFT_SETPTS(FINUFFT_PLAN p, BIGINT nj, FLT* xj, FLT* yj, FLT* zj,
     }
 
     if (p->opts.debug) {  // report on choices of shifts, centers, etc...
-      printf("\tM=%lld N=%lld\n",(long long)nj,(long long)nk);
-      printf("\tX1=%.3g C1=%.3g S1=%.3g D1=%.3g gam1=%g nf1=%lld\t\n", p->t3P.X1, p->t3P.C1,S1, p->t3P.D1, p->t3P.gam1,(long long) p->nf1);
+      Rprintf("\tM=%lld N=%lld\n",(long long)nj,(long long)nk);
+      Rprintf("\tX1=%.3g C1=%.3g S1=%.3g D1=%.3g gam1=%g nf1=%lld\t\n", p->t3P.X1, p->t3P.C1,S1, p->t3P.D1, p->t3P.gam1,(long long) p->nf1);
       if (d>1)
-        printf("\tX2=%.3g C2=%.3g S2=%.3g D2=%.3g gam2=%g nf2=%lld\n",p->t3P.X2, p->t3P.C2,S2, p->t3P.D2, p->t3P.gam2,(long long) p->nf2);
+        Rprintf("\tX2=%.3g C2=%.3g S2=%.3g D2=%.3g gam2=%g nf2=%lld\n",p->t3P.X2, p->t3P.C2,S2, p->t3P.D2, p->t3P.gam2,(long long) p->nf2);
       if (d>2)
-        printf("\tX3=%.3g C3=%.3g S3=%.3g D3=%.3g gam3=%g nf3=%lld\n", p->t3P.X3, p->t3P.C3,S3, p->t3P.D3, p->t3P.gam3,(long long) p->nf3);
+        Rprintf("\tX3=%.3g C3=%.3g S3=%.3g D3=%.3g gam3=%g nf3=%lld\n", p->t3P.X3, p->t3P.C3,S3, p->t3P.D3, p->t3P.gam3,(long long) p->nf3);
     }
     p->nf = p->nf1*p->nf2*p->nf3;      // fine grid total number of points
     if (p->nf * p->batchSize > MAX_NF) {
-      fprintf(stderr, "[%s t3] fwBatch would be bigger than MAX_NF, not attempting malloc!\n",__func__);
+      REprintf("Error", "[%s t3] fwBatch would be bigger than MAX_NF, not attempting malloc!\n",__func__);
       return ERR_MAXNALLOC;
     }
     p->fwBatch = FFTW_ALLOC_CPX(p->nf * p->batchSize);    // maybe big workspace
     // (note FFTW_ALLOC is not needed over malloc, but matches its type)
     p->CpBatch = (CPX*)malloc(sizeof(CPX) * nj*p->batchSize);  // batch c' work
-    if (p->opts.debug) printf("[%s t3] widcen, batch %.2fGB alloc:\t%.3g s\n", __func__, (double)1E-09*sizeof(CPX)*(p->nf+nj)*p->batchSize, timer.elapsedsec());
+    if (p->opts.debug) Rprintf("[%s t3] widcen, batch %.2fGB alloc:\t%.3g s\n", __func__, (double)1E-09*sizeof(CPX)*(p->nf+nj)*p->batchSize, timer.elapsedsec());
     if(!p->fwBatch || !p->CpBatch) {
-      fprintf(stderr, "[%s t3] malloc fail for fwBatch or CpBatch!\n",__func__);
+      REprintf("Error", "[%s t3] malloc fail for fwBatch or CpBatch!\n",__func__);
       return ERR_ALLOC; 
     }
     //printf("fwbatch, cpbatch ptrs: %llx %llx\n",p->fwBatch,p->CpBatch);
@@ -875,17 +876,17 @@ int FINUFFT_SETPTS(FINUFFT_PLAN p, BIGINT nj, FLT* xj, FLT* yj, FLT* zj,
       }
     }
     free(phiHatk1); free(phiHatk2); free(phiHatk3);  // done w/ deconv fill
-    if (p->opts.debug) printf("[%s t3] phase & deconv factors:\t%.3g s\n",__func__,timer.elapsedsec());
+    if (p->opts.debug) Rprintf("[%s t3] phase & deconv factors:\t%.3g s\n",__func__,timer.elapsedsec());
 
     // Set up sort for spreading Cp (from primed NU src pts X, Y, Z) to fw...
     timer.restart();
     p->sortIndices = (BIGINT *)malloc(sizeof(BIGINT)*p->nj);
     if (!p->sortIndices) {
-      fprintf(stderr,"[%s t3] failed to allocate sortIndices!\n",__func__);
+      REprintf("Error","[%s t3] failed to allocate sortIndices!\n",__func__);
       return ERR_SPREAD_ALLOC;
     }
     p->didSort = indexSort(p->sortIndices, p->nf1, p->nf2, p->nf3, p->nj, p->X, p->Y, p->Z, p->spopts);
-    if (p->opts.debug) printf("[%s t3] sort (didSort=%d):\t\t%.3g s\n",__func__, p->didSort, timer.elapsedsec());
+    if (p->opts.debug) Rprintf("[%s t3] sort (didSort=%d):\t\t%.3g s\n",__func__, p->didSort, timer.elapsedsec());
  
     // Plan and setpts once, for the (repeated) inner type 2 finufft call...
     timer.restart();
@@ -898,15 +899,15 @@ int FINUFFT_SETPTS(FINUFFT_PLAN p, BIGINT nj, FLT* xj, FLT* yj, FLT* zj,
     int ier = FINUFFT_MAKEPLAN(2, d, t2nmodes, p->fftSign, p->batchSize, p->tol,
                                &p->innerT2plan, &t2opts);
     if (ier>1) {     // if merely warning, still proceed
-      fprintf(stderr,"[%s t3]: inner type 2 plan creation failed with ier=%d!\n",__func__,ier);
+      REprintf("Error","[%s t3]: inner type 2 plan creation failed with ier=%d!\n",__func__,ier);
       return ier;
     }
     ier = FINUFFT_SETPTS(p->innerT2plan, nk, p->Sp, p->Tp, p->Up, 0, NULL, NULL, NULL);  // note nk = # output points (not nj)
     if (ier>1) {
-      fprintf(stderr,"[%s t3]: inner type 2 setpts failed, ier=%d!\n",__func__,ier);
+      REprintf("Error","[%s t3]: inner type 2 setpts failed, ier=%d!\n",__func__,ier);
       return ier;
     }
-    if (p->opts.debug) printf("[%s t3] inner t2 plan & setpts: \t%.3g s\n", __func__,timer.elapsedsec());
+    if (p->opts.debug) Rprintf("[%s t3] inner t2 plan & setpts: \t%.3g s\n", __func__,timer.elapsedsec());
 
   }
   return 0;
@@ -934,7 +935,7 @@ int FINUFFT_EXECUTE(FINUFFT_PLAN p, CPX* cj, CPX* fk){
   
     double t_sprint = 0.0, t_fft = 0.0, t_deconv = 0.0;  // accumulated timing
     if (p->opts.debug)
-      printf("[%s] start ntrans=%d (%d batches, bsize=%d)...\n", __func__, p->ntrans, p->nbatch, p->batchSize);
+      Rprintf("[%s] start ntrans=%d (%d batches, bsize=%d)...\n", __func__, p->ntrans, p->nbatch, p->batchSize);
     
     for (int b=0; b*p->batchSize < p->ntrans; b++) { // .....loop b over batches
 
@@ -943,7 +944,7 @@ int FINUFFT_EXECUTE(FINUFFT_PLAN p, CPX* cj, CPX* fk){
       int bB = b*p->batchSize;         // index of vector, since batchsizes same
       CPX* cjb = cj + bB*p->nj;        // point to batch of weights
       CPX* fkb = fk + bB*p->N;         // point to batch of mode coeffs
-      if (p->opts.debug>1) printf("[%s] start batch %d (size %d):\n",__func__, b,thisBatchSize);
+      if (p->opts.debug>1) Rprintf("[%s] start batch %d (size %d):\n",__func__, b,thisBatchSize);
       
       // STEP 1: (varies by type)
       timer.restart();
@@ -960,7 +961,7 @@ int FINUFFT_EXECUTE(FINUFFT_PLAN p, CPX* cj, CPX* fk){
       FFTW_EX(p->fftwPlan);   // if thisBatchSize<batchSize it wastes some flops
       t_fft += timer.elapsedsec();
       if (p->opts.debug>1)
-        printf("\tFFTW exec:\t\t%.3g s\n", timer.elapsedsec());
+        Rprintf("\tFFTW exec:\t\t%.3g s\n", timer.elapsedsec());
       
       // STEP 3: (varies by type)
       timer.restart();        
@@ -975,24 +976,24 @@ int FINUFFT_EXECUTE(FINUFFT_PLAN p, CPX* cj, CPX* fk){
     
     if (p->opts.debug) {  // report total times in their natural order...
       if(p->type == 1) {
-        printf("[%s] done. tot spread:\t\t%.3g s\n",__func__,t_sprint);
-        printf("               tot FFT:\t\t\t\t%.3g s\n", t_fft);
-        printf("               tot deconvolve:\t\t\t%.3g s\n", t_deconv);
+        Rprintf("[%s] done. tot spread:\t\t%.3g s\n",__func__,t_sprint);
+        Rprintf("               tot FFT:\t\t\t\t%.3g s\n", t_fft);
+        Rprintf("               tot deconvolve:\t\t\t%.3g s\n", t_deconv);
       } else {
-        printf("[%s] done. tot deconvolve:\t\t%.3g s\n",__func__,t_deconv);
-        printf("               tot FFT:\t\t\t\t%.3g s\n", t_fft);
-        printf("               tot interp:\t\t\t%.3g s\n",t_sprint);
+        Rprintf("[%s] done. tot deconvolve:\t\t%.3g s\n",__func__,t_deconv);
+        Rprintf("               tot FFT:\t\t\t\t%.3g s\n", t_fft);
+        Rprintf("               tot interp:\t\t\t%.3g s\n",t_sprint);
       }
     }
   }
 
   else {  // ----------------------------- TYPE 3 EXEC ---------------------
 
-    //for (BIGINT j=0;j<10;++j) printf("\tcj[%ld]=%.15g+%.15gi\n",(long int)j,(double)real(cj[j]),(double)imag(cj[j]));  // debug
+    //for (BIGINT j=0;j<10;++j) Rprintf("\tcj[%ld]=%.15g+%.15gi\n",(long int)j,(double)real(cj[j]),(double)imag(cj[j]));  // debug
     
     double t_pre=0.0, t_spr=0.0, t_t2=0.0, t_deconv=0.0;  // accumulated timings
     if (p->opts.debug)
-      printf("[%s t3] start ntrans=%d (%d batches, bsize=%d)...\n",__func__,p->ntrans, p->nbatch, p->batchSize);
+      Rprintf("[%s t3] start ntrans=%d (%d batches, bsize=%d)...\n",__func__,p->ntrans, p->nbatch, p->batchSize);
 
     for (int b=0; b*p->batchSize < p->ntrans; b++) { // .....loop b over batches
 
@@ -1001,7 +1002,7 @@ int FINUFFT_EXECUTE(FINUFFT_PLAN p, CPX* cj, CPX* fk){
       int bB = b*p->batchSize;
       CPX* cjb = cj + bB*p->nj;           // batch of input strengths
       CPX* fkb = fk + bB*p->nk;           // batch of output strengths
-      if (p->opts.debug>1) printf("[%s t3] start batch %d (size %d):\n",__func__,b,thisBatchSize);
+      if (p->opts.debug>1) Rprintf("[%s t3] start batch %d (size %d):\n",__func__,b,thisBatchSize);
       
       // STEP 0: pre-phase (possibly) the c_j input strengths into c'_j batch...
       timer.restart();
@@ -1019,7 +1020,7 @@ int FINUFFT_EXECUTE(FINUFFT_PLAN p, CPX* cj, CPX* fk){
       spreadinterpSortedBatch(thisBatchSize, p, p->CpBatch);  // p->X are primed
       t_spr += timer.elapsedsec();
 
-      //for (int j=0;j<p->nf1;++j) printf("fw[%d]=%.3g+%.3gi\n",j,p->fwBatch[j][0],p->fwBatch[j][1]);  // debug
+      //for (int j=0;j<p->nf1;++j) Rprintf("fw[%d]=%.3g+%.3gi\n",j,p->fwBatch[j][0],p->fwBatch[j][1]);  // debug
    
       // STEP 2: type 2 NUFFT from fw batch to user output fk array batch...
       timer.restart();
@@ -1042,13 +1043,13 @@ int FINUFFT_EXECUTE(FINUFFT_PLAN p, CPX* cj, CPX* fk){
     }                                                   // ........end b loop
 
     if (p->opts.debug) {  // report total times in their natural order...
-      printf("[%s t3] done. tot prephase:\t\t%.3g s\n",__func__,t_pre);
-      printf("                  tot spread:\t\t\t%.3g s\n",t_spr);
-      printf("                  tot type 2:\t\t\t%.3g s\n", t_t2);
-      printf("                  tot deconvolve:\t\t%.3g s\n", t_deconv);
+      Rprintf("[%s t3] done. tot prephase:\t\t%.3g s\n",__func__,t_pre);
+      Rprintf("                  tot spread:\t\t\t%.3g s\n",t_spr);
+      Rprintf("                  tot type 2:\t\t\t%.3g s\n", t_t2);
+      Rprintf("                  tot deconvolve:\t\t%.3g s\n", t_deconv);
     }    
   }
-  //for (BIGINT k=0;k<10;++k) printf("\tfk[%ld]=%.15g+%.15gi\n",(long int)k,(double)real(fk[k]),(double)imag(fk[k]));  // debug
+  //for (BIGINT k=0;k<10;++k) Rprintf("\tfk[%ld]=%.15g+%.15gi\n",(long int)k,(double)real(fk[k]),(double)imag(fk[k]));  // debug
   
   return 0; 
 }

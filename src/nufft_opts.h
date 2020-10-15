@@ -1,3 +1,4 @@
+#include <Rcpp.h>
 #ifndef OPTS_H
 #define OPTS_H
 
@@ -16,7 +17,7 @@ typedef struct nufft_opts{    // defaults see finufft.cpp:finufft_default_opts()
   // diagnostic opts...
   int debug;              // 0 silent, 1 some timing/debug, or 2 more
   int spread_debug;       // spreader: 0 silent, 1 some timing/debug, or 2 tonnes
-  int showwarn;           // 0 don't print warnings to stderr, 1 do
+  int showwarn;           // 0 don't print warnings to "Error", 1 do
 
   // algorithm performance opts...
   int nthreads;           // number of threads to use, or 0 uses all available

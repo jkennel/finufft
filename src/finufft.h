@@ -1,3 +1,4 @@
+#include <Rcpp.h>
 // Defines the C++/C user interface to FINUFFT library.
 
 // It simply combines single and double precision headers, by flipping a flag

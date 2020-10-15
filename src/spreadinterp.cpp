@@ -1,3 +1,4 @@
+#include <Rcpp.h>
 #include "spreadinterp.h"
 #include "dataTypes.h"
 #include "defs.h"
@@ -157,7 +158,7 @@ int spreadinterp(
     return ier;
   BIGINT* sort_indices = (BIGINT*)malloc(sizeof(BIGINT)*M);
   if (!sort_indices) {
-    fprintf(stderr,"%s failed to allocate sort_indices!\n",__func__);
+    REprintf("Error","%s failed to allocate sort_indices!\n",__func__);
     return ERR_SPREAD_ALLOC;
   }
   int did_sort = indexSort(sort_indices, N1, N2, N3, M, kx, ky, kz, opts);
@@ -189,11 +190,11 @@ int spreadcheck(BIGINT N1, BIGINT N2, BIGINT N3, BIGINT M, FLT *kx, FLT *ky,
   // INPUT CHECKING & REPORTING .... cuboid not too small for spreading?
   int minN = 2*opts.nspread;
   if (N1<minN || (N2>1 && N2<minN) || (N3>1 && N3<minN)) {
-    fprintf(stderr,"%s error: one or more non-trivial box dims is less than 2.nspread!\n",__func__);
+    REprintf("Error","%s error: one or more non-trivial box dims is less than 2.nspread!\n",__func__);
     return ERR_SPREAD_BOX_SMALL;
   }
   if (opts.spread_direction!=1 && opts.spread_direction!=2) {
-    fprintf(stderr,"%s error: opts.spread_direction must be 1 or 2!\n",__func__);
+    REprintf("Error","%s error: opts.spread_direction must be 1 or 2!\n",__func__);
     return ERR_SPREAD_DIR;
   }
   int ndims = ndims_from_Ns(N1,N2,N3);
@@ -204,7 +205,7 @@ int spreadcheck(BIGINT N1, BIGINT N2, BIGINT N3, BIGINT M, FLT *kx, FLT *ky,
     for (BIGINT i=0; i<M; ++i) {
       FLT x=FOLDRESCALE(kx[i],N1,opts.pirange);  // this includes +-1 box folding
       if (x<0 || x>N1 || !isfinite(x)) {     // note isfinite() breaks with -Ofast
-        fprintf(stderr,"%s NU pt not in valid range (central three periods): kx=%g, N1=%lld (pirange=%d)\n",__func__,x,(long long)N1,opts.pirange);
+        REprintf("Error","%s NU pt not in valid range (central three periods): kx=%g, N1=%lld (pirange=%d)\n",__func__,x,(long long)N1,opts.pirange);
         return ERR_SPREAD_PTS_OUT_RANGE;
       }
     }
@@ -212,7 +213,7 @@ int spreadcheck(BIGINT N1, BIGINT N2, BIGINT N3, BIGINT M, FLT *kx, FLT *ky,
       for (BIGINT i=0; i<M; ++i) {
         FLT y=FOLDRESCALE(ky[i],N2,opts.pirange);
         if (y<0 || y>N2 || !isfinite(y)) {
-          fprintf(stderr,"%s NU pt not in valid range (central three periods): ky=%g, N2=%lld (pirange=%d)\n",__func__,y,(long long)N2,opts.pirange);
+          REprintf("Error","%s NU pt not in valid range (central three periods): ky=%g, N2=%lld (pirange=%d)\n",__func__,y,(long long)N2,opts.pirange);
           return ERR_SPREAD_PTS_OUT_RANGE;
         }
       }
@@ -220,11 +221,11 @@ int spreadcheck(BIGINT N1, BIGINT N2, BIGINT N3, BIGINT M, FLT *kx, FLT *ky,
       for (BIGINT i=0; i<M; ++i) {
         FLT z=FOLDRESCALE(kz[i],N3,opts.pirange);
         if (z<0 || z>N3 || !isfinite(z)) {
-          fprintf(stderr,"%s NU pt not in valid range (central three periods): kz=%g, N3=%lld (pirange=%d)\n",__func__,z,(long long)N3,opts.pirange);
+          REprintf("Error","%s NU pt not in valid range (central three periods): kz=%g, N3=%lld (pirange=%d)\n",__func__,z,(long long)N3,opts.pirange);
           return ERR_SPREAD_PTS_OUT_RANGE;
         }
       }
-    if (opts.debug) printf("\tNU bnds check:\t\t%.3g s\n",timer.elapsedsec());
+    if (opts.debug) Rprintf("\tNU bnds check:\t\t%.3g s\n",timer.elapsedsec());
   }
   return 0; 
 }
@@ -266,14 +267,14 @@ int indexSort(BIGINT* sort_indices, BIGINT N1, BIGINT N2, BIGINT N3, BIGINT M,
     else                                      // sort_nthr>1, sets # threads
       bin_sort_multithread(sort_indices,M,kx,ky,kz,N1,N2,N3,opts.pirange,bin_size_x,bin_size_y,bin_size_z,sort_debug,sort_nthr);
     if (opts.debug) 
-      printf("\tsorted (%d threads):\t%.3g s\n",sort_nthr,timer.elapsedsec());
+      Rprintf("\tsorted (%d threads):\t%.3g s\n",sort_nthr,timer.elapsedsec());
     did_sort=1;
   } else {
 #pragma omp parallel for num_threads(maxnthr) schedule(static,1000000)
     for (BIGINT i=0; i<M; i++)                // omp helps xeon, hinders i7
       sort_indices[i]=i;                      // the identity permutation
     if (opts.debug)
-      printf("\tnot sorted (sort=%d): \t%.3g s\n",(int)opts.sort,timer.elapsedsec());
+      Rprintf("\tnot sorted (sort=%d): \t%.3g s\n",(int)opts.sort,timer.elapsedsec());
   }
   return did_sort;
 }
@@ -292,12 +293,12 @@ int spreadSorted(BIGINT* sort_indices,BIGINT N1, BIGINT N2, BIGINT N3,
   if (opts.nthreads>0)
     nthr = min(nthr,opts.nthreads);     // user override up to max avail
   if (opts.debug)
-    printf("\tspread %dD (M=%lld; N1=%lld,N2=%lld,N3=%lld; pir=%d), nthr=%d\n",ndims,(long long)M,(long long)N1,(long long)N2,(long long)N3,opts.pirange,nthr);
+    Rprintf("\tspread %dD (M=%lld; N1=%lld,N2=%lld,N3=%lld; pir=%d), nthr=%d\n",ndims,(long long)M,(long long)N1,(long long)N2,(long long)N3,opts.pirange,nthr);
   
   timer.start();
   for (BIGINT i=0; i<2*N; i++) // zero the output array. std::fill is no faster
     data_uniform[i]=0.0;
-  if (opts.debug) printf("\tzero output array\t%.3g s\n",timer.elapsedsec());
+  if (opts.debug) Rprintf("\tzero output array\t%.3g s\n",timer.elapsedsec());
   if (M==0)                     // no NU pts, we're done
     return 0;
   
@@ -309,7 +310,7 @@ int spreadSorted(BIGINT* sort_indices,BIGINT N1, BIGINT N2, BIGINT N3,
       // *** todo, not urgent
       // ... (question is: will the index wrapping per NU pt slow it down?)
     }
-    if (opts.debug) printf("\tt1 simple spreading:\t%.3g s\n",timer.elapsedsec());
+    if (opts.debug) Rprintf("\tt1 simple spreading:\t%.3g s\n",timer.elapsedsec());
     
   } else {           // ------- Fancy multi-core blocked t1 spreading ----
                      // Splits sorted inds (jfm's advanced2), could double RAM.
@@ -318,11 +319,11 @@ int spreadSorted(BIGINT* sort_indices,BIGINT N1, BIGINT N2, BIGINT N3,
       nb = 1 + (M-1)/opts.max_subproblem_size;  // int div does ceil(M/opts.max_subproblem_size)
     if (M*1000<N) {         // low-density heuristic: one thread per NU pt!
       nb = M;
-      if (opts.debug) printf("\tusing low-density speed rescue nb=M...\n");
+      if (opts.debug) Rprintf("\tusing low-density speed rescue nb=M...\n");
     }
     if (!did_sort && nthr==1) {
       nb = 1;
-      if (opts.debug) printf("\tunsorted nthr=1: forcing single subproblem...\n");
+      if (opts.debug) Rprintf("\tunsorted nthr=1: forcing single subproblem...\n");
     }
     std::vector<BIGINT> brk(nb+1); // NU index breakpoints defining nb subproblems
     for (int p=0;p<=nb;++p)
@@ -351,11 +352,11 @@ int spreadSorted(BIGINT* sort_indices,BIGINT N1, BIGINT N2, BIGINT N3,
         get_subgrid(offset1,offset2,offset3,size1,size2,size3,M0,kx0,ky0,kz0,ns,ndims);  // sets offsets and sizes
         if (opts.debug>1) { // verbose
           if (ndims==1)
-            printf("\tsubgrid: off %lld\t siz %lld\t #NU %lld\n",(long long)offset1,(long long)size1,(long long)M0);
+            Rprintf("\tsubgrid: off %lld\t siz %lld\t #NU %lld\n",(long long)offset1,(long long)size1,(long long)M0);
           else if (ndims==2)
-            printf("\tsubgrid: off %lld,%lld\t siz %lld,%lld\t #NU %lld\n",(long long)offset1,(long long)offset2,(long long)size1,(long long)size2,(long long)M0);
+            Rprintf("\tsubgrid: off %lld,%lld\t siz %lld,%lld\t #NU %lld\n",(long long)offset1,(long long)offset2,(long long)size1,(long long)size2,(long long)M0);
           else
-            printf("\tsubgrid: off %lld,%lld,%lld\t siz %lld,%lld,%lld\t #NU %lld\n",(long long)offset1,(long long)offset2,(long long)offset3,(long long)size1,(long long)size2,(long long)size3,(long long)M0);
+            Rprintf("\tsubgrid: off %lld,%lld,%lld\t siz %lld,%lld,%lld\t #NU %lld\n",(long long)offset1,(long long)offset2,(long long)offset3,(long long)size1,(long long)size2,(long long)size3,(long long)M0);
 	}
         for (BIGINT j=0; j<M0; j++) {
           kx0[j]-=offset1;  // now kx0 coords are relative to corner of subgrid
@@ -388,7 +389,7 @@ int spreadSorted(BIGINT* sort_indices,BIGINT N1, BIGINT N2, BIGINT N3,
         if (N2>1) free(ky0);
         if (N3>1) free(kz0); 
       }     // end main loop over subprobs
-      if (opts.debug) printf("\tt1 fancy spread: \t%.3g s (%d subprobs)\n",timer.elapsedsec(), nb);
+      if (opts.debug) Rprintf("\tt1 fancy spread: \t%.3g s (%d subprobs)\n",timer.elapsedsec(), nb);
     }   // end of choice of which t1 spread type to use
     return 0;
 };
@@ -406,7 +407,7 @@ int interpSorted(BIGINT* sort_indices,BIGINT N1, BIGINT N2, BIGINT N3,
   if (opts.nthreads>0)
     nthr = min(nthr,opts.nthreads);      // user override up to max avail
   if (opts.debug)
-    printf("\tinterp %dD (M=%lld; N1=%lld,N2=%lld,N3=%lld; pir=%d), nthr=%d\n",ndims,(long long)M,(long long)N1,(long long)N2,(long long)N3,opts.pirange,nthr);
+    Rprintf("\tinterp %dD (M=%lld; N1=%lld,N2=%lld,N3=%lld; pir=%d), nthr=%d\n",ndims,(long long)M,(long long)N1,(long long)N2,(long long)N3,opts.pirange,nthr);
 
   timer.start();  
 #pragma omp parallel num_threads(nthr)
@@ -498,7 +499,7 @@ int interpSorted(BIGINT* sort_indices,BIGINT N1, BIGINT N2, BIGINT N3,
         
       } // end NU targ loop
   } // end parallel section
-  if (opts.debug) printf("\tt2 spreading loop: \t%.3g s\n",timer.elapsedsec());
+  if (opts.debug) Rprintf("\tt2 spreading loop: \t%.3g s\n",timer.elapsedsec());
   return 0;
 };
 
@@ -542,16 +543,16 @@ int setup_spreader(spread_opts &opts, FLT eps, double upsampfac,
 {
   if (upsampfac!=2.0 && upsampfac!=1.25) {   // nonstandard sigma
     if (kerevalmeth==1) {
-      fprintf(stderr,"FINUFFT setup_spreader: nonstandard upsampfac=%.3g cannot be handled by kerevalmeth=1\n",upsampfac);
+      REprintf("Error","FINUFFT setup_spreader: nonstandard upsampfac=%.3g cannot be handled by kerevalmeth=1\n",upsampfac);
       return ERR_HORNER_WRONG_BETA;
     }
     if (upsampfac<=1.0) {       // no digits would result
-      fprintf(stderr,"FINUFFT setup_spreader: error, upsampfac=%.3g is <=1.0\n",upsampfac);
+      REprintf("Error","FINUFFT setup_spreader: error, upsampfac=%.3g is <=1.0\n",upsampfac);
       return ERR_UPSAMPFAC_TOO_SMALL;
     }
     // calling routine must abort on above errors, since opts is garbage!
     if (showwarn && upsampfac>4.0)
-      fprintf(stderr,"FINUFFT setup_spreader warning: upsampfac=%.3g way too large to be beneficial.\n",upsampfac);
+      REprintf("Error","FINUFFT setup_spreader warning: upsampfac=%.3g way too large to be beneficial.\n",upsampfac);
   }
     
   // write out default spread_opts (some overridden in setup_spreader_for_nufft)
@@ -571,7 +572,7 @@ int setup_spreader(spread_opts &opts, FLT eps, double upsampfac,
   int ns, ier = 0;  // Set kernel width w (aka ns, nspread) then copy to opts...
   if (eps<EPSILON) {            // safety; there's no hope of beating e_mach
     if (showwarn)
-      fprintf(stderr,"%s warning: increasing tol=%.3g to eps_mach=%.3g.\n",__func__,(double)eps,(double)EPSILON);
+      REprintf("Error","%s warning: increasing tol=%.3g to eps_mach=%.3g.\n",__func__,(double)eps,(double)EPSILON);
     eps = EPSILON;              // only changes local copy (not any opts)
     ier = WARN_EPS_TOO_SMALL;
   }
@@ -582,7 +583,7 @@ int setup_spreader(spread_opts &opts, FLT eps, double upsampfac,
   ns = max(2,ns);               // (we don't have ns=1 version yet)
   if (ns>MAX_NSPREAD) {         // clip to fit allocated arrays, Horner rules
     if (showwarn)
-      fprintf(stderr,"%s warning: at upsampfac=%.3g, tol=%.3g would need kernel width ns=%d; clipping to max %d.\n",__func__,
+      REprintf("Error","%s warning: at upsampfac=%.3g, tol=%.3g would need kernel width ns=%d; clipping to max %d.\n",__func__,
               upsampfac,(double)eps,ns,MAX_NSPREAD);
     ns = MAX_NSPREAD;
     ier = WARN_EPS_TOO_SMALL;
@@ -603,7 +604,7 @@ int setup_spreader(spread_opts &opts, FLT eps, double upsampfac,
   }
   opts.ES_beta = betaoverns * (FLT)ns;    // set the kernel beta parameter
   if (debug)
-    printf("%s (kerevalmeth=%d) eps=%.3g sigma=%.3g: chose ns=%d beta=%.3g\n",__func__,kerevalmeth,(double)eps,upsampfac,ns,(double)opts.ES_beta);
+    Rprintf("%s (kerevalmeth=%d) eps=%.3g sigma=%.3g: chose ns=%d beta=%.3g\n",__func__,kerevalmeth,(double)eps,upsampfac,ns,(double)opts.ES_beta);
   
   return ier;
 }
@@ -897,7 +898,7 @@ static inline void eval_kernel_vec_Horner(FLT *ker, const FLT x, const int w,
     FLT c17[] = {1.1808835093099178E-02, -2.5444299558662394E-02, -1.5661344238792723E-04, 2.5820071204205225E-01, -1.0930950485268096E+00, 2.6408492552008669E+00, -4.4415763059111955E+00, 6.8227366238712817E+00, -6.8186662643534008E+00, 4.4887924763186051E+00, -2.6327085361651021E+00, 1.0918739406714428E+00, -2.5844238963842503E-01, 1.2680123888735934E-04, 2.5444206395526567E-02, -1.1808834826225629E-02};
     for (int i=0; i<16; i++) ker[i] = c0[i] + z*(c1[i] + z*(c2[i] + z*(c3[i] + z*(c4[i] + z*(c5[i] + z*(c6[i] + z*(c7[i] + z*(c8[i] + z*(c9[i] + z*(c10[i] + z*(c11[i] + z*(c12[i] + z*(c13[i] + z*(c14[i] + z*(c15[i] + z*(c16[i] + z*(c17[i])))))))))))))))));
   } else
-    printf("width not implemented!\n");
+    Rprintf("width not implemented!\n");
     } else if (opts.upsampfac==1.25) {
 // Code generated by gen_all_horner_C_code.m in finufft/devel
 // Authors: Alex Barnett & Ludvig af Klinteberg.
@@ -1090,9 +1091,9 @@ static inline void eval_kernel_vec_Horner(FLT *ker, const FLT x, const int w,
     FLT c16[] = {-1.0467998068898355E-02, -3.2140568385029999E-04, 5.2979866592800886E-04, -1.5800624712947203E-04, -1.4200041949817279E-03, 3.7626007108648857E-03, -3.8348321381240775E-03, 1.6547563335740942E-03, 1.5759584129276946E-03, -3.8873640852216617E-03, 3.7166352571544989E-03, -1.4265706883689335E-03, -1.5923746463956793E-04, 5.2952292450647511E-04, -3.2141610431099765E-04, -1.0467998084554094E-02};
     for (int i=0; i<16; i++) ker[i] = c0[i] + z*(c1[i] + z*(c2[i] + z*(c3[i] + z*(c4[i] + z*(c5[i] + z*(c6[i] + z*(c7[i] + z*(c8[i] + z*(c9[i] + z*(c10[i] + z*(c11[i] + z*(c12[i] + z*(c13[i] + z*(c14[i] + z*(c15[i] + z*(c16[i]))))))))))))))));
   } else
-    printf("width not implemented!\n");
+    Rprintf("width not implemented!\n");
     } else
-      fprintf(stderr,"%s: unknown upsampfac, failed!\n",__func__);
+      REprintf("Error","%s: unknown upsampfac, failed!\n",__func__);
   }
 }
 
@@ -1525,7 +1526,7 @@ void bin_sort_multithread(BIGINT *ret, BIGINT M, FLT *kx, FLT *ky, FLT *kz,
   nbins3 = iskz ? N3/bin_size_z+1 : 1;
   BIGINT nbins = nbins1*nbins2*nbins3;
   if (nthr==0)
-    fprintf(stderr,"[%s] nthr (%d) must be positive!\n",__func__,nthr);
+    REprintf("Error","[%s] nthr (%d) must be positive!\n",__func__,nthr);
   int nt = min(M,(BIGINT)nthr);  // handle case of more points than threads
   std::vector<BIGINT> brk(nt+1); // start NU pt indices per thread
 

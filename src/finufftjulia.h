@@ -1,3 +1,4 @@
+#include <Rcpp.h>
 #ifndef FINUFFTJULIA_H
 #define FINUFFTJULIA_H
 

@@ -1,3 +1,4 @@
+#include <Rcpp.h>
 // ------------ FINUFFT data type definitions ----------------------------------
 
 #if (!defined(DATATYPES_H) && !defined(SINGLE)) || (!defined(DATATYPESF_H) && defined(SINGLE))

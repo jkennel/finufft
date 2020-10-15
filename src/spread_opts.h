@@ -1,3 +1,4 @@
+#include <Rcpp.h>
 #ifndef SPREAD_OPTS_H
 #define SPREAD_OPTS_H
 

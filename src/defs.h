@@ -1,3 +1,4 @@
+#include <Rcpp.h>
 // Library internal definitions. Eg, prec switch, complex type, various macros.
 // Only need work in C++.
 // Split out by Joakim Anden, Alex Barnett 9/20/18-9/24/18.

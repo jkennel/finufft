@@ -1,3 +1,4 @@
+#include <Rcpp.h>
 // Low-level array manipulations, timer, and OMP helpers, that need separate
 // single/double routines (FLT must be an arg). Others are in utils_precindep
 

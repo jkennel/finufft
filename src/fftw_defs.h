@@ -1,3 +1,4 @@
+#include <Rcpp.h>
 #ifndef FFTW_DEFS_H
 #define FFTW_DEFS_H
 
