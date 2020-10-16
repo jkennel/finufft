@@ -11,13 +11,17 @@ xj <- x_comp[s]
 cj <- complex(real = sin(3000 * xj) + sin(200 * xj) * 0.2, imaginary = 0)
 
 out_1d1 <- nufft_1d1(xj = xj, cj = cj, n1 = n1, tol = 1e-10)
-
 tinytest::expect_equal(length(out_1d1), n1)
 
-out_1d2 <- nufft_1d2(xj = xj, fk = cj, tol = 1e-10)
+
+
+fk <- complex(real = rnorm(100000), imaginary = rnorm(100000))
+out_1d2 <- nufft_1d2(xj = xj, fk = fk, tol = 1e-10)
 tinytest::expect_equal(length(out_1d2), length(xj))
 
-sk <- as.numeric(0:20)
+
+
+sk <- sort(rnorm(1000))
 out_1d3 <- nufft_1d3(xj = xj, cj = cj, sk = sk, tol = 1e-10)
 tinytest::expect_equal(length(out_1d3), length(sk))
 

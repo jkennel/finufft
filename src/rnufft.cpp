@@ -36,7 +36,7 @@ Rcpp::ComplexVector nufft_1d1(std::vector<double> xj,
   
   int m = xj.size();
   
-  int64_t ns[] = {n1};       // N1,N2 as 64-bit int array
+  int64_t ns[] = {n1,1,1};       // N1,N2 as 64-bit int array
   int ntrans = 1;            // we want to do a single transform at a time
   finufft_plan plan;         // creates a plan struct
   
@@ -77,20 +77,20 @@ Rcpp::ComplexVector nufft_1d2(std::vector<double> xj,
                               std::vector<std::complex<double>> fk, 
                               double tol = 1e-9) {
   
-  int m = fk.size();
-  int n1 = xj.size();
+  int m = xj.size();
+  int n1 = fk.size();
   
-  int64_t ns[] = {n1};       // N1,N2 as 64-bit int array
+  int64_t ns[] = {n1,1,1};        // N1,N2 as 64-bit int array
   int ntrans = 1;            // we want to do a single transform at a time
   finufft_plan plan;         // creates a plan struct
   
-  finufft_makeplan(1, 1, ns, +1, ntrans, tol, &plan, NULL);
+  finufft_makeplan(2, 1, ns, +1, ntrans, tol, &plan, NULL);
   
   // note FINUFFT doesn't use std::vector types, so we need to make a pointer...
   finufft_setpts(plan, m, &xj[0], NULL, NULL, 0, NULL, NULL, NULL);
   
   // alloc output array for the Fourier modes, then do the transform
-  std::vector<std::complex<double>> cj(n1);
+  std::vector<std::complex<double>> cj(m);
   
   int ier = finufft_execute(plan, &cj[0], &fk[0]);
   
@@ -127,11 +127,11 @@ Rcpp::ComplexVector nufft_1d3(std::vector<double> xj,
   int m = xj.size();
   int n1 = sk.size();
   
-  int64_t ns[] = {n1};       // N1,N2 as 64-bit int array
+  int64_t ns[] = {n1,1,1};       // N1,N2 as 64-bit int array
   int ntrans = 1;            // we want to do a single transform at a time
   finufft_plan plan;         // creates a plan struct
   
-  finufft_makeplan(1, 1, ns, +1, ntrans, tol, &plan, NULL);
+  finufft_makeplan(3, 1, ns, +1, ntrans, tol, &plan, NULL);
   
   // note FINUFFT doesn't use std::vector types, so we need to make a pointer...
   finufft_setpts(plan, m, &xj[0], NULL, NULL, n1, &sk[0], NULL, NULL);
