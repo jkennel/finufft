@@ -2,9 +2,9 @@
 % Please edit documentation in R/RcppExports.R
 \name{nufft_1d2}
 \alias{nufft_1d2}
-\title{nufft_1d2 (dimension 1, type 2)}
+\title{nufft_1d2}
 \usage{
-nufft_1d2(xj, fk, tol = 1e-09)
+nufft_1d2(xj, fk, tol = 1e-09, iflag = 1L)
 }
 \arguments{
 \item{xj}{locations}
@@ -12,6 +12,8 @@ nufft_1d2(xj, fk, tol = 1e-09)
 \item{fk}{complex weights}
 
 \item{tol}{precision}
+
+\item{iflag}{+ or - i}
 }
 \value{
 complex vector

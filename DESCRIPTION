@@ -7,8 +7,12 @@ Author: Jonathan Kennel and Beth Parker
 Maintainer: Jonathan Kennel <jkennel@uoguelph.ca>
 Description: R interface to the FINUFFT library used to efficiently calculate nonuniform fast Fourier transforms.
 License: Apache License (>= 2.0)
-Imports: Rcpp (>= 1.0.5)
-LinkingTo: Rcpp
+Imports: 
+    Rcpp (>= 1.0.5),
+    RcppArmadillo (>= 0.9.200.7.0)
+LinkingTo: 
+    Rcpp, 
+    RcppArmadillo
 SystemRequirements: 
     fftw3 (>= 3.3.5), 
     C++14

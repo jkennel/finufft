@@ -11,17 +11,64 @@
 #' @param cj complex weights
 #' @param n1 number of output modes
 #' @param tol precision
+#' @param iflag + or - i
 #'
 #' @return complex vector
 #'
-#' 
+#'
 #' @export
-nufft_1d1 <- function(xj, cj, n1, tol = 1e-9) {
-    .Call(`_finufft_nufft_1d1`, xj, cj, n1, tol)
+nufft_1d1 <- function(xj, cj, n1, tol = 1e-9, iflag = 1L) {
+    .Call(`_finufft_nufft_1d1`, xj, cj, n1, tol, iflag)
 }
 
 #' @title
-#' nufft_1d2 (dimension 1, type 2)
+#' nufft_2d1
+#'
+#' @description
+#' wrapper for 2d dim nufft (dimension 2, type 1)
+#'
+#' @param xj locations
+#' @param yj locations
+#' @param cj complex weights
+#' @param n1 number of output modes
+#' @param n2 number of output modes
+#' @param tol precision
+#' @param iflag + or - i
+#'
+#' @return complex vector
+#'
+#'
+#' @export
+nufft_2d1 <- function(xj, yj, cj, n1, n2, tol = 1e-9, iflag = 1L) {
+    .Call(`_finufft_nufft_2d1`, xj, yj, cj, n1, n2, tol, iflag)
+}
+
+#' @title
+#' nufft_3d1
+#'
+#' @description
+#' wrapper for 3d dim nufft (dimension 1, type 1)
+#'
+#' @param xj locations
+#' @param yj locations
+#' @param zj locations
+#' @param cj complex weights
+#' @param n1 number of output modes
+#' @param n2 number of output modes
+#' @param n3 number of output modes
+#' @param tol precision
+#' @param iflag + or - i
+#'
+#' @return complex vector
+#'
+#'
+#' @export
+nufft_3d1 <- function(xj, yj, zj, cj, n1, n2, n3, tol = 1e-9, iflag = 1L) {
+    .Call(`_finufft_nufft_3d1`, xj, yj, zj, cj, n1, n2, n3, tol, iflag)
+}
+
+#' @title
+#' nufft_1d2
 #'
 #' @description
 #' wrapper for 1d dim nufft (dimension 1, type 2)
@@ -29,13 +76,55 @@ nufft_1d1 <- function(xj, cj, n1, tol = 1e-9) {
 #' @param xj locations
 #' @param fk complex weights
 #' @param tol precision
+#' @param iflag + or - i
 #'
 #' @return complex vector
 #'
-#' 
+#'
 #' @export
-nufft_1d2 <- function(xj, fk, tol = 1e-9) {
-    .Call(`_finufft_nufft_1d2`, xj, fk, tol)
+nufft_1d2 <- function(xj, fk, tol = 1e-9, iflag = 1L) {
+    .Call(`_finufft_nufft_1d2`, xj, fk, tol, iflag)
+}
+
+#' @title
+#' nufft_2d2
+#'
+#' @description
+#' wrapper for 2d dim nufft (dimension 2, type 2)
+#'
+#' @param xj locations
+#' @param yj locations
+#' @param fk complex weights
+#' @param tol precision
+#' @param iflag + or - i
+#'
+#' @return complex vector
+#'
+#'
+#' @export
+nufft_2d2 <- function(xj, yj, fk, tol = 1e-9, iflag = 1L) {
+    .Call(`_finufft_nufft_2d2`, xj, yj, fk, tol, iflag)
+}
+
+#' @title
+#' nufft_3d2
+#'
+#' @description
+#' wrapper for 3d dim nufft (dimension 3, type 2)
+#'
+#' @param xj locations
+#' @param yj locations
+#' @param zj locations
+#' @param fk complex weights
+#' @param tol precision
+#' @param iflag + or - i
+#'
+#' @return complex vector
+#'
+#'
+#' @export
+nufft_3d2 <- function(xj, yj, zj, fk, tol = 1e-9, iflag = 1L) {
+    .Call(`_finufft_nufft_3d2`, xj, yj, zj, fk, tol, iflag)
 }
 
 #' @title
@@ -48,12 +137,59 @@ nufft_1d2 <- function(xj, fk, tol = 1e-9) {
 #' @param cj complex weights
 #' @param sk locations
 #' @param tol precision
+#' @param iflag + or - i
 #'
 #' @return complex vector
 #'
-#' 
+#'
 #' @export
-nufft_1d3 <- function(xj, cj, sk, tol = 1e-9) {
-    .Call(`_finufft_nufft_1d3`, xj, cj, sk, tol)
+nufft_1d3 <- function(xj, cj, sk, tol = 1e-9, iflag = 1L) {
+    .Call(`_finufft_nufft_1d3`, xj, cj, sk, tol, iflag)
+}
+
+#' @title
+#' nufft_2d3
+#'
+#' @description
+#' wrapper for 2d dim nufft (dimension 2, type 3)
+#'
+#' @param xj locations
+#' @param yj locations
+#' @param cj complex weights
+#' @param sk locations
+#' @param tk locations
+#' @param tol precision
+#' @param iflag + or - i
+#'
+#' @return complex vector
+#'
+#'
+#' @export
+nufft_2d3 <- function(xj, yj, cj, sk, tk, tol = 1e-9, iflag = 1L) {
+    .Call(`_finufft_nufft_2d3`, xj, yj, cj, sk, tk, tol, iflag)
+}
+
+#' @title
+#' nufft_3d3
+#'
+#' @description
+#' wrapper for 3d dim nufft (dimension 3, type 3)
+#'
+#' @param xj locations
+#' @param yj locations
+#' @param zj locations
+#' @param cj complex weights
+#' @param sk locations
+#' @param tk locations
+#' @param uk locations
+#' @param tol precision
+#' @param iflag + or - i
+#'
+#' @return complex vector
+#'
+#'
+#' @export
+nufft_3d3 <- function(xj, yj, zj, cj, sk, tk, uk, tol = 1e-9, iflag = 1L) {
+    .Call(`_finufft_nufft_3d3`, xj, yj, zj, cj, sk, tk, uk, tol, iflag)
 }
 
