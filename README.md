@@ -4,7 +4,7 @@
 
 ## finufft
 
-Provide an R interface to FINUFFT (https://github.com/flatironinstitute/finufft).
+Provide an R interface to FINUFFT (https://github.com/flatironinstitute/finufft).  This package is under development and may not be stable.
 
 ### Steps 
 - Clone FINUFFT git repository (https://github.com/flatironinstitute/finufft) to inst folder.
