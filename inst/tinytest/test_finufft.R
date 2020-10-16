@@ -15,7 +15,7 @@ tinytest::expect_equal(length(out_1d1), n1)
 
 
 
-fk <- complex(real = rnorm(100000), imaginary = rnorm(100000))
+fk <- complex(real = rnorm(10000), imaginary = rnorm(10000))
 out_1d2 <- nufft_1d2(xj = xj, fk = fk, tol = 1e-10)
 tinytest::expect_equal(length(out_1d2), length(xj))
 
