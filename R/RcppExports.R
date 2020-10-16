@@ -2,68 +2,58 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 #' @title
-#' nufft_1
+#' nufft_1d1
 #'
 #' @description
-#' wrapper for 1d dim nufft
+#' wrapper for 1d dim nufft (dimension 1, type 1)
 #'
-#' @param x locations
-#' @param c complex weights
-#' @param N1 number of output modes
+#' @param xj locations
+#' @param cj complex weights
+#' @param n1 number of output modes
 #' @param tol precision
-#' @param type dimension
 #'
 #' @return complex vector
 #'
 #' 
 #' @export
-nufft_1 <- function(x, c, N1, tol = 1e-9, type = 1L) {
-    .Call(`_finufft_nufft_1`, x, c, N1, tol, type)
+nufft_1d1 <- function(xj, cj, n1, tol = 1e-9) {
+    .Call(`_finufft_nufft_1d1`, xj, cj, n1, tol)
 }
 
 #' @title
-#' nufft_2
+#' nufft_1d2 (dimension 1, type 2)
 #'
 #' @description
-#' wrapper for 2d nufft
+#' wrapper for 1d dim nufft (dimension 1, type 2)
 #'
-#' @param x locations
-#' @param y locations
-#' @param c complex weights
-#' @param N1 number of output modes
-#' @param N2 number of output modes
+#' @param xj locations
+#' @param fk complex weights
 #' @param tol precision
-#' @param type dimension
 #'
 #' @return complex vector
 #'
 #' 
 #' @export
-nufft_2 <- function(x, y, c, N1, N2, tol = 1e-9, type = 1L) {
-    .Call(`_finufft_nufft_2`, x, y, c, N1, N2, tol, type)
+nufft_1d2 <- function(xj, fk, tol = 1e-9) {
+    .Call(`_finufft_nufft_1d2`, xj, fk, tol)
 }
 
 #' @title
-#' nufft_3
+#' nufft_1d3
 #'
 #' @description
-#' wrapper for 3d nufft
+#' wrapper for 1d dim nufft (dimension 1, type 3)
 #'
-#' @param x locations
-#' @param y locations
-#' @param z locations
-#' @param c complex weights
-#' @param N1 number of output modes
-#' @param N2 number of output modes
-#' @param N3 number of output modes
+#' @param xj locations
+#' @param cj complex weights
+#' @param sk locations
 #' @param tol precision
-#' @param type dimension
 #'
 #' @return complex vector
 #'
 #' 
 #' @export
-nufft_3 <- function(x, y, z, c, N1, N2, N3, tol = 1e-9, type = 1L) {
-    .Call(`_finufft_nufft_3`, x, y, z, c, N1, N2, N3, tol, type)
+nufft_1d3 <- function(xj, cj, sk, tol = 1e-9) {
+    .Call(`_finufft_nufft_1d3`, xj, cj, sk, tol)
 }
 

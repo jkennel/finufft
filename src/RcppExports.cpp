@@ -5,62 +5,52 @@
 
 using namespace Rcpp;
 
-// nufft_1
-Rcpp::ComplexVector nufft_1(std::vector<double> x, std::vector<std::complex<double>> c, int N1, double tol, int type);
-RcppExport SEXP _finufft_nufft_1(SEXP xSEXP, SEXP cSEXP, SEXP N1SEXP, SEXP tolSEXP, SEXP typeSEXP) {
+// nufft_1d1
+Rcpp::ComplexVector nufft_1d1(std::vector<double> xj, std::vector<std::complex<double>> cj, int n1, double tol);
+RcppExport SEXP _finufft_nufft_1d1(SEXP xjSEXP, SEXP cjSEXP, SEXP n1SEXP, SEXP tolSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::vector<double> >::type x(xSEXP);
-    Rcpp::traits::input_parameter< std::vector<std::complex<double>> >::type c(cSEXP);
-    Rcpp::traits::input_parameter< int >::type N1(N1SEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type xj(xjSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::complex<double>> >::type cj(cjSEXP);
+    Rcpp::traits::input_parameter< int >::type n1(n1SEXP);
     Rcpp::traits::input_parameter< double >::type tol(tolSEXP);
-    Rcpp::traits::input_parameter< int >::type type(typeSEXP);
-    rcpp_result_gen = Rcpp::wrap(nufft_1(x, c, N1, tol, type));
+    rcpp_result_gen = Rcpp::wrap(nufft_1d1(xj, cj, n1, tol));
     return rcpp_result_gen;
 END_RCPP
 }
-// nufft_2
-Rcpp::ComplexVector nufft_2(std::vector<double> x, std::vector<double> y, std::vector<std::complex<double>> c, int N1, int N2, double tol, int type);
-RcppExport SEXP _finufft_nufft_2(SEXP xSEXP, SEXP ySEXP, SEXP cSEXP, SEXP N1SEXP, SEXP N2SEXP, SEXP tolSEXP, SEXP typeSEXP) {
+// nufft_1d2
+Rcpp::ComplexVector nufft_1d2(std::vector<double> xj, std::vector<std::complex<double>> fk, double tol);
+RcppExport SEXP _finufft_nufft_1d2(SEXP xjSEXP, SEXP fkSEXP, SEXP tolSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::vector<double> >::type x(xSEXP);
-    Rcpp::traits::input_parameter< std::vector<double> >::type y(ySEXP);
-    Rcpp::traits::input_parameter< std::vector<std::complex<double>> >::type c(cSEXP);
-    Rcpp::traits::input_parameter< int >::type N1(N1SEXP);
-    Rcpp::traits::input_parameter< int >::type N2(N2SEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type xj(xjSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::complex<double>> >::type fk(fkSEXP);
     Rcpp::traits::input_parameter< double >::type tol(tolSEXP);
-    Rcpp::traits::input_parameter< int >::type type(typeSEXP);
-    rcpp_result_gen = Rcpp::wrap(nufft_2(x, y, c, N1, N2, tol, type));
+    rcpp_result_gen = Rcpp::wrap(nufft_1d2(xj, fk, tol));
     return rcpp_result_gen;
 END_RCPP
 }
-// nufft_3
-Rcpp::ComplexVector nufft_3(std::vector<double> x, std::vector<double> y, std::vector<double> z, std::vector<std::complex<double>> c, int N1, int N2, int N3, double tol, int type);
-RcppExport SEXP _finufft_nufft_3(SEXP xSEXP, SEXP ySEXP, SEXP zSEXP, SEXP cSEXP, SEXP N1SEXP, SEXP N2SEXP, SEXP N3SEXP, SEXP tolSEXP, SEXP typeSEXP) {
+// nufft_1d3
+Rcpp::ComplexVector nufft_1d3(std::vector<double> xj, std::vector<std::complex<double>> cj, std::vector<double> sk, double tol);
+RcppExport SEXP _finufft_nufft_1d3(SEXP xjSEXP, SEXP cjSEXP, SEXP skSEXP, SEXP tolSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::vector<double> >::type x(xSEXP);
-    Rcpp::traits::input_parameter< std::vector<double> >::type y(ySEXP);
-    Rcpp::traits::input_parameter< std::vector<double> >::type z(zSEXP);
-    Rcpp::traits::input_parameter< std::vector<std::complex<double>> >::type c(cSEXP);
-    Rcpp::traits::input_parameter< int >::type N1(N1SEXP);
-    Rcpp::traits::input_parameter< int >::type N2(N2SEXP);
-    Rcpp::traits::input_parameter< int >::type N3(N3SEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type xj(xjSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::complex<double>> >::type cj(cjSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type sk(skSEXP);
     Rcpp::traits::input_parameter< double >::type tol(tolSEXP);
-    Rcpp::traits::input_parameter< int >::type type(typeSEXP);
-    rcpp_result_gen = Rcpp::wrap(nufft_3(x, y, z, c, N1, N2, N3, tol, type));
+    rcpp_result_gen = Rcpp::wrap(nufft_1d3(xj, cj, sk, tol));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_finufft_nufft_1", (DL_FUNC) &_finufft_nufft_1, 5},
-    {"_finufft_nufft_2", (DL_FUNC) &_finufft_nufft_2, 7},
-    {"_finufft_nufft_3", (DL_FUNC) &_finufft_nufft_3, 9},
+    {"_finufft_nufft_1d1", (DL_FUNC) &_finufft_nufft_1d1, 4},
+    {"_finufft_nufft_1d2", (DL_FUNC) &_finufft_nufft_1d2, 3},
+    {"_finufft_nufft_1d3", (DL_FUNC) &_finufft_nufft_1d3, 4},
     {NULL, NULL, 0}
 };
 

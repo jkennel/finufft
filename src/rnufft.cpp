@@ -14,98 +14,89 @@ using namespace Rcpp;
 
 //==============================================================================
 //' @title
-//' nufft_1
+//' nufft_1d1
 //'
 //' @description
-//' wrapper for 1d dim nufft
+//' wrapper for 1d dim nufft (dimension 1, type 1)
 //'
-//' @param x locations
-//' @param c complex weights
-//' @param N1 number of output modes
+//' @param xj locations
+//' @param cj complex weights
+//' @param n1 number of output modes
 //' @param tol precision
-//' @param type dimension
 //'
 //' @return complex vector
 //'
 //' 
 //' @export
 // [[Rcpp::export]]
-Rcpp::ComplexVector nufft_1(std::vector<double> x,
-                            std::vector<std::complex<double>> c, 
-                            int N1,
-                            double tol = 1e-9,
-                            int type = 1) {
+Rcpp::ComplexVector nufft_1d1(std::vector<double> xj,
+                              std::vector<std::complex<double>> cj, 
+                              int n1,
+                              double tol = 1e-9) {
   
-  int M = x.size();
+  int m = xj.size();
   
-  int64_t Ns[] = {N1};       // N1,N2 as 64-bit int array
-  int ntrans = 1;           // we want to do a single transform at a time
+  int64_t ns[] = {n1};       // N1,N2 as 64-bit int array
+  int ntrans = 1;            // we want to do a single transform at a time
   finufft_plan plan;         // creates a plan struct
   
-  finufft_makeplan(type, 1, Ns, +1, ntrans, tol, &plan, NULL);
+  finufft_makeplan(1, 1, ns, +1, ntrans, tol, &plan, NULL);
   
   // note FINUFFT doesn't use std::vector types, so we need to make a pointer...
-  finufft_setpts(plan, M, &x[0], NULL, NULL, 0, NULL, NULL, NULL);
+  finufft_setpts(plan, m, &xj[0], NULL, NULL, 0, NULL, NULL, NULL);
   
   // alloc output array for the Fourier modes, then do the transform
-  std::vector<std::complex<double>> F(N1);
+  std::vector<std::complex<double>> fk(n1);
   
-  int ier = finufft_execute(plan, &c[0], &F[0]);
+  int ier = finufft_execute(plan, &cj[0], &fk[0]);
   
   finufft_destroy(plan);    // done with transforms of this size
   
-  return Rcpp::wrap(F);
+  return Rcpp::wrap(fk);
   
 }
 
 
 //==============================================================================
 //' @title
-//' nufft_2
+//' nufft_1d2 (dimension 1, type 2)
 //'
 //' @description
-//' wrapper for 2d nufft
+//' wrapper for 1d dim nufft (dimension 1, type 2)
 //'
-//' @param x locations
-//' @param y locations
-//' @param c complex weights
-//' @param N1 number of output modes
-//' @param N2 number of output modes
+//' @param xj locations
+//' @param fk complex weights
 //' @param tol precision
-//' @param type dimension
 //'
 //' @return complex vector
 //'
 //' 
 //' @export
 // [[Rcpp::export]]
-Rcpp::ComplexVector nufft_2(std::vector<double> x,
-                            std::vector<double> y,
-                            std::vector<std::complex<double>> c, 
-                            int N1,
-                            int N2,
-                            double tol = 1e-9,
-                            int type = 1) {
+Rcpp::ComplexVector nufft_1d2(std::vector<double> xj,
+                              std::vector<std::complex<double>> fk, 
+                              double tol = 1e-9) {
   
-  int M = x.size();
+  int m = fk.size();
+  int n1 = xj.size();
   
-  int64_t Ns[] = {N1, N2};       // N1,N2 as 64-bit int array
-  int ntrans = 1;                // we want to do a single transform at a time
-  finufft_plan plan;             // creates a plan struct
+  int64_t ns[] = {n1};       // N1,N2 as 64-bit int array
+  int ntrans = 1;            // we want to do a single transform at a time
+  finufft_plan plan;         // creates a plan struct
   
-  finufft_makeplan(type, 2, Ns, +1, ntrans, tol, &plan, NULL);
+  finufft_makeplan(1, 1, ns, +1, ntrans, tol, &plan, NULL);
   
   // note FINUFFT doesn't use std::vector types, so we need to make a pointer...
-  finufft_setpts(plan, M, &x[0], &y[0], NULL, 0, NULL, NULL, NULL);
+  finufft_setpts(plan, m, &xj[0], NULL, NULL, 0, NULL, NULL, NULL);
   
   // alloc output array for the Fourier modes, then do the transform
-  std::vector<std::complex<double>> F(N1*N2);
+  std::vector<std::complex<double>> cj(n1);
   
-  int ier = finufft_execute(plan, &c[0], &F[0]);
+  int ier = finufft_execute(plan, &cj[0], &fk[0]);
   
   finufft_destroy(plan);    // done with transforms of this size
   
-  return Rcpp::wrap(F);
+  return Rcpp::wrap(cj);
   
 }
 
@@ -113,54 +104,46 @@ Rcpp::ComplexVector nufft_2(std::vector<double> x,
 
 //==============================================================================
 //' @title
-//' nufft_3
+//' nufft_1d3
 //'
 //' @description
-//' wrapper for 3d nufft
+//' wrapper for 1d dim nufft (dimension 1, type 3)
 //'
-//' @param x locations
-//' @param y locations
-//' @param z locations
-//' @param c complex weights
-//' @param N1 number of output modes
-//' @param N2 number of output modes
-//' @param N3 number of output modes
+//' @param xj locations
+//' @param cj complex weights
+//' @param sk locations
 //' @param tol precision
-//' @param type dimension
 //'
 //' @return complex vector
 //'
 //' 
 //' @export
 // [[Rcpp::export]]
-Rcpp::ComplexVector nufft_3(std::vector<double> x,
-                            std::vector<double> y,
-                            std::vector<double> z,
-                            std::vector<std::complex<double>> c, 
-                            int N1,
-                            int N2,
-                            int N3,
-                            double tol = 1e-9,
-                            int type = 1) {
+Rcpp::ComplexVector nufft_1d3(std::vector<double> xj,
+                              std::vector<std::complex<double>> cj, 
+                              std::vector<double> sk,
+                              double tol = 1e-9) {
   
-  int M = x.size();
+  int m = xj.size();
+  int n1 = sk.size();
   
-  int64_t Ns[] = {N1, N2, N3};       // N1,N2 as 64-bit int array
-  int ntrans = 1;                // we want to do a single transform at a time
-  finufft_plan plan;             // creates a plan struct
+  int64_t ns[] = {n1};       // N1,N2 as 64-bit int array
+  int ntrans = 1;            // we want to do a single transform at a time
+  finufft_plan plan;         // creates a plan struct
   
-  finufft_makeplan(type, 3, Ns, +1, ntrans, tol, &plan, NULL);
+  finufft_makeplan(1, 1, ns, +1, ntrans, tol, &plan, NULL);
   
   // note FINUFFT doesn't use std::vector types, so we need to make a pointer...
-  finufft_setpts(plan, M, &x[0], &y[0], &z[0], 0, NULL, NULL, NULL);
+  finufft_setpts(plan, m, &xj[0], NULL, NULL, n1, &sk[0], NULL, NULL);
   
   // alloc output array for the Fourier modes, then do the transform
-  std::vector<std::complex<double>> F(N1*N2*N3);
+  std::vector<std::complex<double>> fk(n1);
   
-  int ier = finufft_execute(plan, &c[0], &F[0]);
+  int ier = finufft_execute(plan, &cj[0], &fk[0]);
   
   finufft_destroy(plan);    // done with transforms of this size
   
-  return Rcpp::wrap(F);
+  return Rcpp::wrap(fk);
   
 }
+
