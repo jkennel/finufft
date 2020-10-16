@@ -2,21 +2,68 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 #' @title
-#' nfft
+#' nufft_1
 #'
 #' @description
-#' wrapper for 1d1 nufft
+#' wrapper for 1d dim nufft
 #'
 #' @param x locations
 #' @param c complex weights
-#' @param N number of output modes
+#' @param N1 number of output modes
 #' @param tol precision
+#' @param type dimension
 #'
 #' @return complex vector
 #'
 #' 
 #' @export
-nfft <- function(x, c, N, tol = 1e-9) {
-    .Call(`_finufft_nfft`, x, c, N, tol)
+nufft_1 <- function(x, c, N1, tol = 1e-9, type = 1L) {
+    .Call(`_finufft_nufft_1`, x, c, N1, tol, type)
+}
+
+#' @title
+#' nufft_2
+#'
+#' @description
+#' wrapper for 2d nufft
+#'
+#' @param x locations
+#' @param y locations
+#' @param c complex weights
+#' @param N1 number of output modes
+#' @param N2 number of output modes
+#' @param tol precision
+#' @param type dimension
+#'
+#' @return complex vector
+#'
+#' 
+#' @export
+nufft_2 <- function(x, y, c, N1, N2, tol = 1e-9, type = 1L) {
+    .Call(`_finufft_nufft_2`, x, y, c, N1, N2, tol, type)
+}
+
+#' @title
+#' nufft_3
+#'
+#' @description
+#' wrapper for 3d nufft
+#'
+#' @param x locations
+#' @param y locations
+#' @param z locations
+#' @param c complex weights
+#' @param N1 number of output modes
+#' @param N2 number of output modes
+#' @param N3 number of output modes
+#' @param tol precision
+#' @param type dimension
+#'
+#' @return complex vector
+#'
+#' 
+#' @export
+nufft_3 <- function(x, y, z, c, N1, N2, N3, tol = 1e-9, type = 1L) {
+    .Call(`_finufft_nufft_3`, x, y, z, c, N1, N2, N3, tol, type)
 }
 
