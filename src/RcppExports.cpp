@@ -153,6 +153,28 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// fftshift
+arma::cx_vec fftshift(arma::cx_vec x);
+RcppExport SEXP _finufft_fftshift(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::cx_vec >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(fftshift(x));
+    return rcpp_result_gen;
+END_RCPP
+}
+// ifftshift
+arma::vec ifftshift(arma::vec x);
+RcppExport SEXP _finufft_ifftshift(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(ifftshift(x));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_finufft_nufft_1d1", (DL_FUNC) &_finufft_nufft_1d1, 5},
@@ -164,6 +186,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_finufft_nufft_1d3", (DL_FUNC) &_finufft_nufft_1d3, 5},
     {"_finufft_nufft_2d3", (DL_FUNC) &_finufft_nufft_2d3, 7},
     {"_finufft_nufft_3d3", (DL_FUNC) &_finufft_nufft_3d3, 9},
+    {"_finufft_fftshift", (DL_FUNC) &_finufft_fftshift, 1},
+    {"_finufft_ifftshift", (DL_FUNC) &_finufft_ifftshift, 1},
     {NULL, NULL, 0}
 };
 

@@ -193,3 +193,31 @@ nufft_3d3 <- function(xj, yj, zj, cj, sk, tk, uk, tol = 1e-9, iflag = 1L) {
     .Call(`_finufft_nufft_3d3`, xj, yj, zj, cj, sk, tk, uk, tol, iflag)
 }
 
+#' @title
+#' fftshift
+#'
+#' @description
+#' shift vector
+#'
+#' @param x \code{numeric vector}
+#'
+#' @return shifted vector
+#' @export
+fftshift <- function(x) {
+    .Call(`_finufft_fftshift`, x)
+}
+
+#' @title
+#' ifftshift
+#'
+#' @description
+#' shift vector
+#'
+#' @param x \code{numeric vector}
+#'
+#' @return shifted vector
+#' @export
+ifftshift <- function(x) {
+    .Call(`_finufft_ifftshift`, x)
+}
+

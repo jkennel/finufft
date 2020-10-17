@@ -4,6 +4,7 @@ os: linux
 dist: xenial
 apt_packages:
   - libfftw3-dev
+  - devscripts
 r_packages:
   - devtools
   - covr
