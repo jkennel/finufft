@@ -477,3 +477,39 @@ arma::cx_vec nufft_3d3(arma::vec xj,
   return fk;
   
 }
+
+
+//' @title
+//' fftshift
+//'
+//' @description
+//' shift vector
+//'
+//' @param x \code{numeric vector}
+//'
+//' @return shifted vector
+//' @export
+// [[Rcpp::export]]
+arma::cx_vec fftshift(arma::cx_vec x) {
+  int len_x = x.size();
+  int len_shift = floor(len_x / 2);
+  return(arma::shift(x, len_shift));
+}
+
+
+//' @title
+//' ifftshift
+//'
+//' @description
+//' shift vector
+//'
+//' @param x \code{numeric vector}
+//'
+//' @return shifted vector
+//' @export
+// [[Rcpp::export]]
+arma::vec ifftshift(arma::vec x) {
+  int len_x = x.size();
+  int len_shift = floor(len_x / 2);
+  return(arma::shift(x, -len_shift));
+}
