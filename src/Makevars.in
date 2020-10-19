@@ -1,6 +1,6 @@
-PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS)
-PKG_LIBS= $(SHLIB_OPENMP_CXXFLAGS) -lfftw3 -lfftw3_omp -lm 
-
 CXX_STD = CXX14
+PKG_CXXFLAGS = @OPENMP_FLAG@
+PKG_LIBS= @OPENMP_FLAG@ -lfftw3_omp -lfftw3 -lgomp -lm
+
 
 all: $(SHLIB)
