@@ -2,8 +2,7 @@
 // Low-level array manipulations, timer, and OMP helpers, that need separate
 // single/double routines (FLT must be an arg). Others are in utils_precindep
 
-// For its embryonic self-test see ../test/testutils.cpp, which only tests
-// the next235 for now.  Barnett 2017-2020.
+// For self-test see ../test/testutils.cpp        Barnett 2017-2020.
 
 #include "utils.h"
 #include "dataTypes.h"
@@ -52,6 +51,8 @@ FLT infnorm(BIGINT n, CPX* a)
   return sqrt(nrm);
 }
 
+// ------------ real array utils ---------------------------------
+
 void arrayrange(BIGINT n, FLT* a, FLT *lo, FLT *hi)
 // With a a length-n array, writes out min(a) to lo and max(a) to hi,
 // so that all a values lie in [lo,hi].
@@ -61,19 +62,6 @@ void arrayrange(BIGINT n, FLT* a, FLT *lo, FLT *hi)
   for (BIGINT m=0; m<n; ++m) {
     if (a[m]<*lo) *lo = a[m];
     if (a[m]>*hi) *hi = a[m];
-  }
-}
-
-void indexedarrayrange(BIGINT n, BIGINT* i, FLT* a, FLT *lo, FLT *hi)
-// With i a list of n indices, and a an array of length max(i), writes out
-// min(a(i)) to lo and max(a(i)) to hi, so that all a(i) values lie in [lo,hi].
-// This is not currently used in FINUFFT v1.2.
-{
-  *lo = INFINITY; *hi = -INFINITY;
-  for (BIGINT m=0; m<n; ++m) {
-    FLT A=a[i[m]];
-    if (A<*lo) *lo = A;
-    if (A>*hi) *hi = A;
   }
 }
 

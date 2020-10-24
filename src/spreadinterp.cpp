@@ -78,7 +78,7 @@ int spreadinterp(
    In each case phi is the spreading kernel, which has support
    [-opts.nspread/2,opts.nspread/2]. In 2D or 3D, the generalization with
    product of 1D kernels is performed.
-   For 1D set N2=N3=1; for 2D set N3=1; for 3D set N1,N2,N3>0.
+   For 1D set N2=N3=1; for 2D set N3=1; for 3D set N1,N2,N3>1.
 
    Notes:
    No particular normalization of the spreading kernel is assumed.
@@ -86,11 +86,12 @@ int spreadinterp(
    [0,1,...,N1-1] in 1D, analogously in 2D and 3D. They are stored in x
    fastest, y medium, z slowest ordering, up to however many
    dimensions are relevant; note that this is Fortran-style ordering for an
-   array f(x,y,z), but C style for f[z][y][x]. This is to match the fortran
+   array f(x,y,z), but C style for f[z][y][x]. This is to match the Fortran
    interface of the original CMCL libraries.
-   Non-uniform (NU) points kx,ky,kz are real.
-   If pirange=0, should be in the range [0,N1] in 1D, analogously in 2D and 3D.
-   If pirange=1, the range is instead [-pi,pi] for each coord.
+   Non-uniform (NU) points kx,ky,kz are real, and may lie in the central three
+   periods in each coordinate (these are folded into the central period).
+   If pirange=0, the periodic domain for kx is [0,N1], ky [0,N2], kz [0,N3].
+   If pirange=1, the periodic domain is instead [-pi,pi] for each coord.
    The spread_opts struct must have been set up already by calling setup_kernel.
    It is assumed that 2*opts.nspread < min(N1,N2,N3), so that the kernel
    only ever wraps once when falls below 0 or off the top of a uniform grid
@@ -98,50 +99,30 @@ int spreadinterp(
 
    Inputs:
    N1,N2,N3 - grid sizes in x (fastest), y (medium), z (slowest) respectively.
-              If N2==0, 1D spreading is done. If N3==0, 2D spreading.
+              If N2==1, 1D spreading is done. If N3==1, 2D spreading.
 	      Otherwise, 3D.
    M - number of NU pts.
-   kx, ky, kz - length-M real arrays of NU point coordinates (only kz used in
-                1D, only kx and ky used in 2D).
+   kx, ky, kz - length-M real arrays of NU point coordinates (only kx read in
+                1D, only kx and ky read in 2D).
+
 		These should lie in the box 0<=kx<=N1 etc (if pirange=0),
                 or -pi<=kx<=pi (if pirange=1). However, points up to +-1 period
                 outside this domain are also correctly folded back into this
                 domain, but pts beyond this either raise an error (if chkbnds=1)
                 or a crash (if chkbnds=0).
-   opts - object controlling spreading method and text output, has fields
-          including:
-        spread_direction=1, spreads from nonuniform input to uniform output, or
-        spread_direction=2, interpolates ("spread transpose") from uniform input
-                            to nonuniform output.
-	pirange = 0: kx,ky,kz coords in [0,N]. 1: coords in [-pi,pi].
-                (due to +-1 box folding these can be out to [-N,2N] and
-                [-3pi/2,3pi/2] respectively).
-	sort = 0,1,2: whether to sort NU points using natural yz-grid
-	       ordering. 0: don't, 1: do, 2: use heuristic choice (default)
-        sort_threads = 0, 1,... : if >0, set # sorting threads; if 0
-                   allow heuristic choice (either single or all avail).
-	kerpad = 0,1: whether pad to next mult of 4, helps SIMD (kerevalmeth=0).
-	kerevalmeth = 0: direct exp(sqrt(..)) eval; 1: Horner piecewise poly.
-	debug = 0: no text output, 1: some openmp output, 2: mega output
-	           (each NU pt)
-	chkbnds = 0: don't check incoming NU pts for bounds (but still fold +-1)
-                  1: do, and stop with error if any found outside valid bnds
-	flags = integer with binary bits determining various timing options
-                (set to 0 unless expert; see cnufftspread.h)
+   opts - spread/interp options struct, documented in ../include/spread_opts.h
 
    Inputs/Outputs:
    data_uniform - output values on grid (dir=1) OR input grid data (dir=2)
    data_nonuniform - input strengths of the sources (dir=1)
                      OR output values at targets (dir=2)
    Returned value:
-   0 indicates success; other values as follows (see spreadcheck below and
-   see utils.h and ../docs/usage.rst for error codes):
+   0 indicates success; other values have meanings in ../docs/error.rst, with
+   following modifications:
       3 : one or more non-trivial box dimensions is less than 2.nspread.
       4 : nonuniform points outside [-Nm,2*Nm] or [-3pi,3pi] in at least one
           dimension m=1,2,3.
       5 : failed allocate sort indices
-      6 : invalid opts.spread_direction
-
 
    Magland Dec 2016. Barnett openmp version, many speedups 1/16/17-2/16/17
    error codes 3/13/17. pirange 3/28/17. Rewritten 6/15/17. parallel sort 2/9/18
@@ -150,7 +131,7 @@ int spreadinterp(
    kereval, kerpad 4/24/18
    Melody Shih split into 3 routines: check, sort, spread. Jun 2018, making
    this routine just a caller to them. Name change, Barnett 7/27/18
-   Tidy, Barnett 5/20/20.
+   Tidy, Barnett 5/20/20. Tidy doc, Barnett 10/22/20.
 */
 {
   int ier = spreadcheck(N1, N2, N3, M, kx, ky, kz, opts);
@@ -230,19 +211,38 @@ int spreadcheck(BIGINT N1, BIGINT N2, BIGINT N3, BIGINT M, FLT *kx, FLT *ky,
   return 0; 
 }
 
+
 int indexSort(BIGINT* sort_indices, BIGINT N1, BIGINT N2, BIGINT N3, BIGINT M, 
                FLT *kx, FLT *ky, FLT *kz, spread_opts opts)
-/* This makes a decision whether or not to sort the NU pts, and if so, calls
-   either single- or multi-threaded bin sort, writing reordered index list to
-   sort_indices.
-   See spreadinterp() for input arguments, and ../docs/opts.rst for opts.
-   Return value is whether a sort was done or not.
+/* This makes a decision whether or not to sort the NU pts (influenced by
+   opts.sort), and if yes, calls either single- or multi-threaded bin sort,
+   writing reordered index list to sort_indices. If decided not to sort, the
+   identity permutation is written to sort_indices.
+   The permutation is designed to make RAM access close to contiguous, to
+   speed up spreading/interpolation, in the case of disordered NU points.
+
+   Inputs:
+    M        - number of input NU points.
+    kx,ky,kz - length-M arrays of real coords of NU pts, in the domain
+               for FOLDRESCALE, which includes [0,N1], [0,N2], [0,N3]
+               respectively, if opts.pirange=0; or [-pi,pi] if opts.pirange=1.
+               (only kz used in 1D, only kx and ky used in 2D.)
+               These must have been bounds-checked already; see spreadcheck.
+    N1,N2,N3 - integer sizes of overall box (set N2=N3=1 for 1D, N3=1 for 2D).
+               1 = x (fastest), 2 = y (medium), 3 = z (slowest).
+    opts     - spreading options struct, documented in ../include/spread_opts.h
+   Outputs:
+    sort_indices - a good permutation of NU points. (User must preallocate
+                   to length M.) Ie, kx[sort_indices[j]], j=0,..,M-1, is a good
+                   ordering for the x-coords of NU pts, etc.
+    returned value - whether a sort was done (1) or not (0).
+
    Barnett 2017; split out by Melody Shih, Jun 2018.
 */
 {
   CNTime timer;
   int ndims = ndims_from_Ns(N1,N2,N3);
-  BIGINT N=N1*N2*N3;            // output array size
+  BIGINT N=N1*N2*N3;            // U grid (periodic box) sizes
   
   // heuristic binning box size for U grid... affects performance:
   double bin_size_x = 16, bin_size_y = 4, bin_size_z = 4;
@@ -271,7 +271,7 @@ int indexSort(BIGINT* sort_indices, BIGINT N1, BIGINT N2, BIGINT N3, BIGINT M,
     did_sort=1;
   } else {
 #pragma omp parallel for num_threads(maxnthr) schedule(static,1000000)
-    for (BIGINT i=0; i<M; i++)                // omp helps xeon, hinders i7
+    for (BIGINT i=0; i<M; i++)                // here omp helps xeon, hinders i7
       sort_indices[i]=i;                      // the identity permutation
     if (opts.debug)
       Rprintf("\tnot sorted (sort=%d): \t%.3g s\n",(int)opts.sort,timer.elapsedsec());
@@ -280,10 +280,30 @@ int indexSort(BIGINT* sort_indices, BIGINT N1, BIGINT N2, BIGINT N3, BIGINT M,
 }
 
 
+int spreadinterpSorted(BIGINT* sort_indices, BIGINT N1, BIGINT N2, BIGINT N3, 
+		      FLT *data_uniform, BIGINT M, FLT *kx, FLT *ky, FLT *kz,
+		      FLT *data_nonuniform, spread_opts opts, int did_sort)
+/* Logic to select the main spreading (dir=1) vs interpolation (dir=2) routine.
+   See spreadinterp() above for inputs arguments and definitions.
+   Return value should always be 0 (no error reporting).
+   Split out by Melody Shih, Jun 2018; renamed Barnett 5/20/20.
+*/
+{
+  if (opts.spread_direction==1)  // ========= direction 1 (spreading) =======
+    spreadSorted(sort_indices, N1, N2, N3, data_uniform, M, kx, ky, kz, data_nonuniform, opts, did_sort);
+  
+  else           // ================= direction 2 (interpolation) ===========
+    interpSorted(sort_indices, N1, N2, N3, data_uniform, M, kx, ky, kz, data_nonuniform, opts, did_sort);
+  
+  return 0;
+}
+
+
 // --------------------------------------------------------------------------
 int spreadSorted(BIGINT* sort_indices,BIGINT N1, BIGINT N2, BIGINT N3, 
 		      FLT *data_uniform,BIGINT M, FLT *kx, FLT *ky, FLT *kz,
 		      FLT *data_nonuniform, spread_opts opts, int did_sort)
+// Spread NU pts in sorted order to a uniform grid. See spreadinterp() for doc.
 {
   CNTime timer;
   int ndims = ndims_from_Ns(N1,N2,N3);
@@ -398,7 +418,10 @@ int spreadSorted(BIGINT* sort_indices,BIGINT N1, BIGINT N2, BIGINT N3,
 // --------------------------------------------------------------------------
 int interpSorted(BIGINT* sort_indices,BIGINT N1, BIGINT N2, BIGINT N3, 
 		      FLT *data_uniform,BIGINT M, FLT *kx, FLT *ky, FLT *kz,
-		      FLT *data_nonuniform, spread_opts opts, int did_sort){
+		      FLT *data_nonuniform, spread_opts opts, int did_sort)
+// Interpolate to NU pts in sorted order from a uniform grid.
+// See spreadinterp() for doc.
+{
   CNTime timer;
   int ndims = ndims_from_Ns(N1,N2,N3);
   int ns=opts.nspread;          // abbrev. for w, kernel width
@@ -504,24 +527,6 @@ int interpSorted(BIGINT* sort_indices,BIGINT N1, BIGINT N2, BIGINT N3,
 };
 
 
-int spreadinterpSorted(BIGINT* sort_indices,BIGINT N1, BIGINT N2, BIGINT N3, 
-		      FLT *data_uniform,BIGINT M, FLT *kx, FLT *ky, FLT *kz,
-		      FLT *data_nonuniform, spread_opts opts, int did_sort)
-/* Logic to select the main spreading (dir=1) vs interpolation (dir=2) routine.
-   See spreadinterp() above for inputs arguments and definitions.
-   Return value should always be 0 (no error reporting).
-   Split out by Melody Shih, Jun 2018; renamed Barnett 5/20/20.
-*/
-{
-  if (opts.spread_direction==1)  // ========= direction 1 (spreading) =======
-    spreadSorted(sort_indices, N1, N2, N3, data_uniform, M, kx, ky, kz, data_nonuniform, opts, did_sort);
-  
-  else           // ================= direction 2 (interpolation) ===========
-    interpSorted(sort_indices, N1, N2, N3, data_uniform, M, kx, ky, kz, data_nonuniform, opts, did_sort);
-  
-  return 0;
-}
-
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -622,18 +627,6 @@ FLT evaluate_kernel(FLT x, const spread_opts &opts)
     return 0.0;
   else
     return exp(opts.ES_beta * sqrt(1.0 - opts.ES_c*x*x));
-}
-
-FLT evaluate_kernel_noexp(FLT x, const spread_opts &opts)
-// Version of the above just for timing purposes - gives wrong answer!!!
-{
-  if (abs(x)>=opts.ES_halfwidth)
-    return 0.0;
-  else {
-    FLT s = sqrt(1.0 - opts.ES_c*x*x);
-    //  return sinh(opts.ES_beta * s)/s; // roughly, backward K-B kernel of NFFT
-        return opts.ES_beta * s;
-  }
 }
 
 static inline void set_kernel_args(FLT *args, FLT x, const spread_opts& opts)
@@ -1445,31 +1438,32 @@ void bin_sort_singlethread(BIGINT *ret, BIGINT M, FLT *kx, FLT *ky, FLT *kz,
 	      BIGINT N1,BIGINT N2,BIGINT N3,int pirange,
 	      double bin_size_x,double bin_size_y,double bin_size_z, int debug)
 /* Returns permutation of all nonuniform points with good RAM access,
- * ie less cache misses for spreading, in 1D, 2D, or 3D. Singe-threaded version.
+ * ie less cache misses for spreading, in 1D, 2D, or 3D. Single-threaded version
  *
- * This is achieved by binning into cuboids (of given bin_size)
- * then reading out the indices within
- * these boxes in the natural box order (x fastest, y med, z slowest).
- * Finally the permutation is inverted.
+ * This is achieved by binning into cuboids (of given bin_size within the
+ * overall box domain), then reading out the indices within
+ * these bins in a Cartesian cuboid ordering (x fastest, y med, z slowest).
+ * Finally the permutation is inverted, so that the good ordering is: the
+ * NU pt of index ret[0], the NU pt of index ret[1],..., NU pt of index ret[M-1]
  * 
  * Inputs: M - number of input NU points.
  *         kx,ky,kz - length-M arrays of real coords of NU pts, in the domain
  *                    for FOLDRESCALE, which includes [0,N1], [0,N2], [0,N3]
  *                    respectively, if pirange=0; or [-pi,pi] if pirange=1.
- *         N1,N2,N3 - ranges of NU coords (set N2=N3=1 for 1D, N3=1 for 2D)
+ *         N1,N2,N3 - integer sizes of overall box (N2=N3=1 for 1D, N3=1 for 2D)
  *         bin_size_x,y,z - what binning box size to use in each dimension
  *                    (in rescaled coords where ranges are [0,Ni] ).
- *                    For 1D, only bin_size_x is used; for 2D, it and bin_size_y
+ *                    For 1D, only bin_size_x is used; for 2D, it & bin_size_y.
  * Output:
  *         writes to ret a vector list of indices, each in the range 0,..,M-1.
- *         Thus, ret must have been allocated for M BIGINTs.
+ *         Thus, ret must have been preallocated for M BIGINTs.
  *
  * Notes: I compared RAM usage against declaring an internal vector and passing
  * back; the latter used more RAM and was slower.
  * Avoided the bins array, as in JFM's spreader of 2016,
  * tidied up, early 2017, Barnett.
  *
- * Timings: 3s for M=1e8 NU pts on 1 core of i7; 5s on 1 core of xeon.
+ * Timings (2017): 3s for M=1e8 NU pts on 1 core of i7; 5s on 1 core of xeon.
  */
 {
   bool isky=(N2>1), iskz=(N3>1);  // ky,kz avail? (cannot access if not)
@@ -1517,7 +1511,7 @@ void bin_sort_multithread(BIGINT *ret, BIGINT M, FLT *kx, FLT *ky, FLT *kz,
    Caution: when M (# NU pts) << N (# U pts), is SLOWER than single-thread.
    Barnett 2/8/18
    Todo: if debug, print timing breakdowns.
-   Explicit #threads control 7/20/20.
+   Explicit #threads control argument 7/20/20.
  */
 {
   bool isky=(N2>1), iskz=(N3>1);  // ky,kz avail? (cannot access if not)
@@ -1527,20 +1521,22 @@ void bin_sort_multithread(BIGINT *ret, BIGINT M, FLT *kx, FLT *ky, FLT *kz,
   BIGINT nbins = nbins1*nbins2*nbins3;
   if (nthr==0)
     REprintf("Error","[%s] nthr (%d) must be positive!\n",__func__,nthr);
-  int nt = min(M,(BIGINT)nthr);  // handle case of more points than threads
-  std::vector<BIGINT> brk(nt+1); // start NU pt indices per thread
+  int nt = min(M,(BIGINT)nthr);     // handle case of less points than threads
+  std::vector<BIGINT> brk(nt+1);    // list of start NU pt indices per thread
 
-  // distribute the M NU pts to threads once & for all...
+  // distribute the NU pts to threads once & for all...
   for (int t=0; t<=nt; ++t)
     brk[t] = (BIGINT)(0.5 + M*t/(double)nt);   // start index for t'th chunk
-  std::vector<BIGINT> counts(nbins,0);  // counts of how many pts in each bin
-  std::vector< std::vector<BIGINT> > ot(nt,counts); // offsets per thread, nt * nbins
-  {    // scope for ct, the 2d array of counts in bins for each threads's NU pts
+  
+  std::vector<BIGINT> counts(nbins,0);     // global counts: # pts in each bin
+  // offsets per thread, size nt * nbins, init to 0 by copying the counts vec...
+  std::vector< std::vector<BIGINT> > ot(nt,counts);
+  {    // scope for ct, the 2d array of counts in bins for each thread's NU pts
     std::vector< std::vector<BIGINT> > ct(nt,counts);   // nt * nbins, init to 0
     
 #pragma omp parallel num_threads(nt)
-    {                                    // block done once per thread;
-      int t = MY_OMP_GET_THREAD_NUM();   // we assume all nt threads created
+    {  // parallel binning to each thread's count. Block done once per thread
+      int t = MY_OMP_GET_THREAD_NUM();     // (we assume all nt threads created)
       //printf("\tt=%d: [%d,%d]\n",t,jlo[t],jhi[t]);
       for (BIGINT i=brk[t]; i<brk[t+1]; i++) {
         // find the bin index in however many dims are needed
@@ -1551,28 +1547,26 @@ void bin_sort_multithread(BIGINT *ret, BIGINT M, FLT *kx, FLT *ky, FLT *kz,
         ct[t][bin]++;               // no clash btw threads
       }
     }
-#pragma omp parallel for num_threads(nt) schedule(dynamic,10000) // matters
-    for (int t=0; t<nt; ++t)
-      for (BIGINT b=0; b<nbins; ++b)
+    // sum along thread axis to get global counts
+    for (BIGINT b=0; b<nbins; ++b)   // (not worth omp. Either loop order is ok)
+      for (int t=0; t<nt; ++t)
 	counts[b] += ct[t][b];
     
     std::vector<BIGINT> offsets(nbins);   // cumulative sum of bin counts
-    offsets[0]=0;
-    // do: offsets = [0 cumsum(counts(1:end-1))].
-    // multithread? (do chunks in 2 pass) but not many bins; don't bother...
+    // do: offsets = [0 cumsum(counts(1:end-1))] ...
+    offsets[0] = 0;
     for (BIGINT i=1; i<nbins; i++)
       offsets[i]=offsets[i-1]+counts[i-1];
     
     for (BIGINT b=0; b<nbins; ++b)  // now build offsets for each thread & bin:
-      ot[0][b] = offsets[b];                       // init
-#pragma omp parallel for num_threads(nt) schedule(dynamic,10000)
-    for (int t=1; t<nt; ++t)
+      ot[0][b] = offsets[b];                     // init
+    for (int t=1; t<nt; ++t)   // (again not worth omp. Either loop order is ok)
       for (BIGINT b=0; b<nbins; ++b)
 	ot[t][b] = ot[t-1][b]+ct[t-1][b];        // cumsum along t axis
     
-  } // scope frees up ct here
+  }  // scope frees up ct here, before inv alloc
   
-  std::vector<BIGINT> inv(M);           // fill inverse map
+  std::vector<BIGINT> inv(M);           // fill inverse map, in parallel
 #pragma omp parallel num_threads(nt)
   {
     int t = MY_OMP_GET_THREAD_NUM();
